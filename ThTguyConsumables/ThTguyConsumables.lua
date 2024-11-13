@@ -36,7 +36,7 @@ SMODS.ConsumableType{
     key = "Runes",
     primary_colour = HEX("480049"),
     secondary_colour = HEX("890062"),
-    collection_rows = { 2, 6 }, -- 2 pages for all runes
+    collection_rows = { 5, 5 }, -- 1 pages for all runes
     shop_rate = 2,
     loc_txt = {
         name = "Runes",
