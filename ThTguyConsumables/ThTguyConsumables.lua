@@ -5,12 +5,7 @@
 --- MOD_DESCRIPTION: runes and stuff (and a few random jokers)
 
 --[[to do:
-Add runes (negative tarots that are weaker and more temporary)
-Add reverser card (can appear in any pack, and reverses all consumables and makes them eternal (you HAVE to use them))
-Add reverse planet cards (removes a level from poker hand)
-Add reverse runes (more permanent and stronger runes)
-Add reverse tarots (weaker and eternal)
-Add reverse spectrals (weaker and eternal)
+Add runes (negative tarots temporary gain, long term downsides)
 
 Add Jokers (balance top 10% chips + mult, transfer 5% of mult to chips, chip multiplier, set mult to 100, reduce mult by 10% and award 1$ per 10 mult)
 
