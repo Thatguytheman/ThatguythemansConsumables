@@ -7,6 +7,7 @@
 --[[to do:
 Add runes (negative tarots temporary gain, long term downsides)
 
+Add cursed tarots (only gotten from blank rune)
 Add Jokers (balance top 10% chips + mult, transfer 5% of mult to chips, chip multiplier, set mult to 100, reduce mult by 10% and award 1$ per 10 mult)
 
 thank you to cryptid mod because i copied a bunch of stuff from it to learn
@@ -21,7 +22,7 @@ Runes and meanings:
 	OTHALA (Inheritance) : gain intrest cap * 5, lower intrest cap by 20%
 
 
-	Blank : Spawn last used rune, +1% chance for cursed tarots
+	Blank : Spawn last used rune, 50% chance to not get destroyed when used, +5% chance for cursed cards
 ]]
 local IntrestAmt = 0
 
