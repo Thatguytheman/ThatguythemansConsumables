@@ -31,6 +31,7 @@ function Game:start_run(args)
     startRef(self, args)
     G.GAME.TGTMchangeHandSize = 0
     IntrestAmt = G.GAME.interest_cap
+    G.GAME.TGTMLastRune = nil
 end
 
 
@@ -112,7 +113,7 @@ SMODS.Consumable{
     pos = {x = 1, y = 0},
     config = {},
     cost = 4,
-    order = 1,
+    order = 21,
     can_use = function(self, card)
         return G.STATE == G.STATES.SELECTING_HAND
     end,
@@ -144,7 +145,7 @@ SMODS.Consumable{
     pos = {x = 2, y = 0},
     config = {},
     cost = 4,
-    order = 2,
+    order = 24,
     can_use = function(self, card)
         return (G.STATE == G.STATES.SELECTING_HAND and G.GAME.blind:get_type() == 'Boss')
     end,
@@ -178,7 +179,7 @@ SMODS.Consumable{
     pos = {x = 3, y = 0},
     config = {},
     cost = 4,
-    order = 3,
+    order = 23,
     can_use = function(self, card)
         return true
     end,
