@@ -1,8 +1,9 @@
 --- STEAMODDED HEADER
 --- MOD_NAME: TGTM's Consumables
---- MOD_ID: ThTguyConsumables
+--- MOD_ID: TGTMConsumables
 --- MOD_AUTHOR: [Thatguytheman]
 --- MOD_DESCRIPTION: runes and stuff (and a few random jokers)
+--- PREFIX: TGTM
 
 --[[to do:
 Add runes (negative tarots temporary gain, long term downsides)
@@ -33,9 +34,24 @@ function Game:start_run(args)
     G.GAME.TGTMchangeHandSize = 0
     IntrestAmt = G.GAME.interest_cap
     G.GAME.TGTMLastRune = nil
+    G.GAME.TGTMCurseChance = 0
 end
 
-
+SMODS.Edition{
+    key = "Cursed",
+    shader = false,
+    loc_txt = {
+        name = "Cursed!",
+        label = "Cursed!",
+        text = {"{C:red}-10 mult{}", "{X:mult,C:white} X0.75{} mult"}
+    },
+    unlocked = true,
+    discovered = true,
+    config = {
+        mult = -10,
+        x_mult = 0.75
+    }
+}
 
 SMODS.Atlas{
     key = "runes",
@@ -95,6 +111,37 @@ SMODS.Consumable{
 
 ]]
 
+SMODS.Consumable{
+    set_ability = function(self, card, initial, delay_sprites)
+        card:set_edition("e_negative")
+    end,
+	unlocked = true,
+	discovered = true,
+    loc_txt = {
+        name = "blank",
+        text = {""}
+    },
+	atlas = "runes",
+    set = "Runes",
+    name = "runes-blank",
+    key = "blank",
+    pos = {x = 0, y = 0},
+    config = {},
+    cost = 4,
+    order = 1,
+    can_use = function(self, card)
+        return true
+    end,
+    use = function(self, card, area, copier)
+        G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
+            
+            G.GAME.TGTMCurseChance = 1
+
+
+
+        return true end }))
+    end,
+}
 
 --Laguz
 SMODS.Consumable{
@@ -210,3 +257,18 @@ function end_round()
   G.GAME.TGTMchangeHandSize = 0
 end
 --
+local ATDref = Card.add_to_deck
+function Card:add_to_deck(args)
+    ATDref(self, args)
+    print(self.ability.set)
+    print(pseudorandom(pseudoseed("Curse")))
+    print(G.GAME.TGTMCurseChance)
+    if (G.GAME.TGTMCurseChance > 0) and (self.ability.set == 'Joker') and (pseudorandom(pseudoseed("Curse")) < G.GAME.TGTMCurseChance) then
+        G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
+
+            self:set_edition("e_TGTM_Cursed")
+            card_eval_status_text(self,"extra",nil,nil,nil,{message = "Cursed!", color = G.C.PURPLE})
+
+        return true end }))
+    end
+end
