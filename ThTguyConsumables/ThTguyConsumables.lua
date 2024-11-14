@@ -23,7 +23,7 @@ Runes and meanings:
 	OTHALA (Inheritance) : gain intrest cap * 5, lower intrest cap by 20%
 
 
-	Blank : Spawn last used rune, 50% chance to not get destroyed when used, +5% chance for cursed cards
+	Blank : Spawn a rune, 50% chance to not get destroyed when used, +5% chance for cursed cards
 ]]
 local IntrestAmt = 0
 
@@ -43,12 +43,11 @@ SMODS.Edition{
     loc_txt = {
         name = "Cursed!",
         label = "Cursed!",
-        text = {"{C:red}-10 mult{}", "{X:mult,C:white} X0.75{} mult"}
+        text = {"{X:mult,C:white} X0.75{} mult"}
     },
     unlocked = true,
     discovered = true,
     config = {
-        mult = -10,
         x_mult = 0.75
     }
 }
@@ -267,8 +266,21 @@ function Card:add_to_deck(args)
         G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
 
             self:set_edition("e_TGTM_Cursed")
-            card_eval_status_text(self,"extra",nil,nil,nil,{message = "Cursed!", color = G.C.PURPLE})
+            card_eval_status_text(self,"extra",nil,nil,nil,{message = "Cursed!", colour = G.C.PURPLE})
 
         return true end }))
     end
+end
+
+local UseRef = Card.use_consumeable
+function Card:use_consumeable(args)
+    if (G.GAME.TGTMCurseChance > 0) and (self.ability.set == 'Tarot') and (pseudorandom(pseudoseed("Curse")) < G.GAME.TGTMCurseChance) then
+        card_eval_status_text(self,"extra",nil,nil,nil,{message = "Cursed!", colour = G.C.PURPLE})
+        for i = 1, G.GAME.hand.highlighted do
+            card_eval_status_text(self,"extra",nil,nil,nil,{message = "Dummy!", colour = G.C.PURPLE})
+            
+        end
+    end
+    UseRef(self,args)
+
 end
