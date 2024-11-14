@@ -15,13 +15,13 @@ thank you to cryptid mod because i copied a bunch of stuff from it to learn
 
 
 --[[
-    Runes and meanings:
-    Laguz (Water) : +1 discard for round, maybe draw 4 cards less on initial draw, subsequent uses in same round reduces cards drawn by 5 then 6, so on and so forth
-	Dagaz (Dawn) : disable boss blind, +1 ante 
-	OTHALA (Inheritance) : gain x$, lower intrest cap by x
-	
-	Blank : Spawn last used rune
+Runes and meanings:
+	Laguz (Water) : +1 discard for round
+	Dagaz (Dawn) : disable boss blind, no boss reward
+	OTHALA (Inheritance) : gain intrest cap * 5, lower intrest cap by 20%
 
+
+	Blank : Spawn last used rune, +1% chance for cursed tarots
 ]]
 local IntrestAmt = 0
 
