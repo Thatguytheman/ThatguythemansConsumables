@@ -37,6 +37,22 @@ function Game:start_run(args)
     G.GAME.TGTMCurseChance = 0
 end
 
+SMODS.Enhancement{
+    key = "Dummy",
+    unlocked = true,
+    discovered = true,
+    no_suit = true,
+    no_rank = true,
+    replace_base_card = true,
+    bonus = 0,
+    bonus_chips = 0,
+    loc_txt = {
+        name = "Dummy",
+        text = {"Scores 0 chips", "No rank or suit"}
+    }
+    
+}
+
 SMODS.Edition{
     key = "Cursed",
     shader = false,
@@ -74,6 +90,8 @@ SMODS.ConsumableType{
     can_divide = true
 
 }
+
+
 
 --[[
 base for cards
@@ -117,8 +135,8 @@ SMODS.Consumable{
 	unlocked = true,
 	discovered = true,
     loc_txt = {
-        name = "blank",
-        text = {""}
+        name = "Blank",
+        text = {"Spawn a rune", "50% chance to not get destroyed when used", "+5% chance for {C:purple}cursed{} cards"}
     },
 	atlas = "runes",
     set = "Runes",
