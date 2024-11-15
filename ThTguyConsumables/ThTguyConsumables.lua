@@ -31,31 +31,39 @@ local IntrestAmt = 0
 local startRef = Game.start_run
 function Game:start_run(args)
     startRef(self, args)
+
+    --reduce hand size by x after round
     G.GAME.TGTMchangeHandSize = 0
+    --Get intrest amount
     IntrestAmt = G.GAME.interest_cap
-    G.GAME.TGTMLastRune = nil
-    G.GAME.TGTMCurseChance = 0
+    --Chance for a card to get cursed
+    G.GAME.TGTMCurseChance = G.GAME.TGTMCurseChance or 0
 end
 
 SMODS.Enhancement{
-    key = "Locked",
+    --Blank
+    key = "Blank",
     atlas = "Tatatro",
-    pos = {x = 4, y = 2},
+    pos = {x = 5, y = 2},
     unlocked = true,
     discovered = true,
+    --Has no suit or rank
     no_suit = true,
     no_rank = true,
+    --goes over card
     replace_base_card = true,
+    --scores 0 chips
     bonus = 0,
     bonus_chips = 0,
     loc_txt = {
-        name = "Locked",
-        text = {"Scores 0 chips", "No rank or suit"}
+        name = "Blank",
+        text = {"Scores {C:attention}0{} chips", "No rank or suit"}
     }
     
 }
 
 SMODS.Edition{
+    --0.75X mult
     key = "Cursed",
     shader = false,
     loc_txt = {
@@ -87,10 +95,11 @@ SMODS.Atlas{
 SMODS.ConsumableType{
 
     key = "Runes",
+    --Rune colors
     primary_colour = HEX("480049"),
     secondary_colour = HEX("890062"),
-    collection_rows = { 5, 2 }, -- 3 pages for all runes
-    shop_rate = 2,
+    collection_rows = { 5, 2 }, -- 3 pages for all runes, 10 per page
+    shop_rate = 2, -- same as spectrals in shop for ghost
     loc_txt = {
         name = "Runes",
         collection = "Runes"
@@ -193,6 +202,8 @@ SMODS.Consumable{
     end,
     use = function(self, card, area, copier)
         G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
+            --Add 1 discard
+
             ease_discard(1)
             
             --G.GAME.TGTMchangeHandSize = G.GAME.TGTMchangeHandSize - 1
@@ -225,7 +236,9 @@ SMODS.Consumable{
     end,
     use = function(self, card, area, copier)
         G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
+            --disable blind
             G.GAME.blind:disable()
+            --No reward money
             G.GAME.blind.dollars = 0
             G.GAME.current_round.dollars_to_be_earned = ''
         return true end }))
@@ -259,10 +272,12 @@ SMODS.Consumable{
     end,
     use = function(self, card, area, copier)
         G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
+            --Give money
             ease_dollars(G.GAME.interest_cap)
             
             
             print(G.GAME.interest_cap)
+            --reduce by 20% if more than 1 intrest cap
             if G.GAME.interest_cap > 5 then
                 G.GAME.interest_cap = math.floor((G.GAME.interest_cap/5) * 0.8) * 5
             end
@@ -291,7 +306,8 @@ function Card:add_to_deck(args)
     print(G.GAME.TGTMCurseChance)
     if (G.GAME.TGTMCurseChance > 0) and (self.ability.set == 'Joker') and (pseudorandom(pseudoseed("Curse")) < G.GAME.TGTMCurseChance) then
         G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
-
+            
+            --chance for jokers to be cursed
             self:set_edition("e_TGTM_Cursed")
             card_eval_status_text(self,"extra",nil,nil,nil,{message = "Cursed!", colour = G.C.PURPLE})
 
@@ -312,38 +328,68 @@ function Card:use_consumeable(args)
             card_eval_status_text(self,"extra",nil,nil,nil,{message = "Cursed!", colour = G.C.PURPLE})
         return true end }))
 
-        if G.hand and #G.hand.highlighted == 0 then
+        if #G.hand.highlighted == 0 and G.STATE == G.STATES.PLAY_TAROT and #G.hand.cards ~= 0 then
+            print(G.STATE)
+            print(G.STATES.SELECTING_HAND)
+            print(G.hand.config.card_limit)
+            print("G.hand and #G.hand.highlighted == 0 and G.STATES == G.STATES.SELECTING_HAND")
             G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
                 
 
                 
                 local front = pseudorandom_element(G.P_CARDS, pseudoseed('CurseLockedFront'))
                 G.playing_card = (G.playing_card and G.playing_card + 1) or 1
-                local cardLoc = Card(G.play.T.x + G.play.T.w/2, G.play.T.y, G.CARD_W, G.CARD_H, front, G.P_CENTERS.m_TGTM_Locked, {playing_card = G.playing_card})
+                local cardLoc = Card(G.play.T.x + G.play.T.w/2, G.play.T.y, G.CARD_W, G.CARD_H, front, G.P_CENTERS.m_TGTM_Blank, {playing_card = G.playing_card})
                 cardLoc:start_materialize({G.C.SECONDARY_SET.Enhanced})
                 table.insert(G.playing_cards, cardLoc)
-                card_eval_status_text(cardLoc,"extra",nil,nil,nil,{message = "Locked!", colour = G.C.PURPLE})
+                card_eval_status_text(cardLoc,"extra",nil,nil,nil,{message = "Blank!", colour = G.C.PURPLE})
                 G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
                     print(cardLoc)
                     G.hand:emplace(cardLoc, nil, false)
                 return true end }))
             return true end }))
 
-        elseif G.hand then
+        elseif G.STATE == G.STATES.PLAY_TAROT and #G.hand.cards ~= 0 then
+            print(G.STATE)
+            print(G.STATES.SELECTING_HAND)
+            print("G.hand and G.STATES == G.STATES.SELECTING_HAND")
             for i = 1, #G.hand.highlighted do
                 G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
                     local CardRef = G.hand.highlighted[i]
-                    card_eval_status_text(CardRef,"extra",nil,nil,nil,{message = "Locked!", colour = G.C.PURPLE})
+                    card_eval_status_text(CardRef,"extra",nil,nil,nil,{message = "Blank!", colour = G.C.PURPLE})
+                    G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
                     G.hand.highlighted[i]:flip();play_sound('card1', percent);G.hand.highlighted[i]:juice_up(0.3, 0.3)
-                    G.hand.highlighted[i]:set_ability(G.P_CENTERS["m_TGTM_Locked"])
+                    G.hand.highlighted[i]:set_ability(G.P_CENTERS["m_TGTM_Blank"])
+                    return true end }))
+                    G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
                     G.hand.highlighted[i]:flip()
+                    return true end }))
                 return true end }))
             end
         else 
+            --[[
+            print(G.STATE)
+            print(G.STATES.SELECTING_HAND)
+            print("No G.hand and No G.STATES == G.STATES.SELECTING_HAND")
             G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
-                card_eval_status_text(self,"extra",nil,nil,nil,{message = "Locked!", colour = G.C.PURPLE})
-                local LockedSpawn = Card(G.play.T.x + G.play.T.w/2, G.play.T.y, G.CARD_W, G.CARD_H, front, G.P_CENTERS.m_TGTM_Locked, {playing_card = G.playing_card})
-                LockedSpawn:add_to_deck()
+                card_eval_status_text(self,"extra",nil,nil,nil,{message = "Blank!", colour = G.C.PURPLE})
+                local LockedSpawn = Card(G.play.T.x + G.play.T.w/2, G.play.T.y, G.CARD_W, G.CARD_H, front, G.P_CENTERS.m_TGTM_Blank, {playing_card = G.playing_card})
+                --LockedSpawn:add_to_deck()
+                G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
+                    G.deck:emplace(LockedSpawn, nil, false)
+                    table.insert(G.playing_cards, LockedSpawn)
+                return true end }))
+            return true end }))
+            --]]
+            local front = pseudorandom_element(G.P_CARDS, pseudoseed('CurseLockedFront'))
+            G.playing_card = (G.playing_card and G.playing_card + 1) or 1
+            local cardLoc = Card(G.play.T.x + G.play.T.w/2, G.play.T.y, G.CARD_W, G.CARD_H, front, G.P_CENTERS.m_TGTM_Blank, {playing_card = G.playing_card})
+            cardLoc:start_materialize({G.C.SECONDARY_SET.Enhanced})
+            table.insert(G.playing_cards, cardLoc)
+            card_eval_status_text(cardLoc,"extra",nil,nil,nil,{message = "Blank!", colour = G.C.PURPLE})
+            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
+                print(cardLoc)
+                G.deck:emplace(cardLoc, nil, false)
             return true end }))
         end
 
@@ -362,13 +408,15 @@ function Card:use_consumeable(args)
             if G.GAME.hands[handname].level > 1 then
                 update_hand_text({sound = 'button', volume = 0.7, pitch = 0.8, delay = 0.3}, {handname=localize(self.ability.consumeable.hand_type, 'poker_hands'),chips = G.GAME.hands[self.ability.consumeable.hand_type].chips, mult = G.GAME.hands[self.ability.consumeable.hand_type].mult, level=G.GAME.hands[self.ability.consumeable.hand_type].level})
                 self.triggered = true
-                level_up_hand(self.children.animatedSprite, handname, nil, -1)mmmmm
+                level_up_hand(self.children.animatedSprite, handname, nil, -1)
                 update_hand_text({sound = 'button', volume = 0.7, pitch = 1.1, delay = 0}, {mult = 0, chips = 0, handname = '', level = ''})
             end 
         return true end }))
         
-    else
-        UseRef(self,args) 
+    elseif (G.GAME.TGTMCurseChance > 0) and (self.ability.set == 'Spectral') and (pseudorandom(pseudoseed("Curse")) < G.GAME.TGTMCurseChance)
+        
+    else    
+    UseRef(self,args) 
     end
 
 end
