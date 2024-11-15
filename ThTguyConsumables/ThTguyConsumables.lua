@@ -38,7 +38,9 @@ function Game:start_run(args)
 end
 
 SMODS.Enhancement{
-    key = "Dummy",
+    key = "Locked",
+    atlas = "Tatatro",
+    pos = {x = 4, y = 2},
     unlocked = true,
     discovered = true,
     no_suit = true,
@@ -47,7 +49,7 @@ SMODS.Enhancement{
     bonus = 0,
     bonus_chips = 0,
     loc_txt = {
-        name = "Dummy",
+        name = "Locked",
         text = {"Scores 0 chips", "No rank or suit"}
     }
     
@@ -66,6 +68,13 @@ SMODS.Edition{
     config = {
         x_mult = 0.75
     }
+}
+
+SMODS.Atlas{
+    key = "Tatatro",
+	px = 71,
+	py = 95,
+	path = "Tarots.png"
 }
 
 SMODS.Atlas{
@@ -292,13 +301,74 @@ end
 
 local UseRef = Card.use_consumeable
 function Card:use_consumeable(args)
+    stop_use()
+    if not copier then set_consumeable_usage(self) end
+    if self.debuff then return nil end
+    local used_tarot = copier or self
+
     if (G.GAME.TGTMCurseChance > 0) and (self.ability.set == 'Tarot') and (pseudorandom(pseudoseed("Curse")) < G.GAME.TGTMCurseChance) then
-        card_eval_status_text(self,"extra",nil,nil,nil,{message = "Cursed!", colour = G.C.PURPLE})
-        for i = 1, G.GAME.hand.highlighted do
-            card_eval_status_text(self,"extra",nil,nil,nil,{message = "Dummy!", colour = G.C.PURPLE})
-            
+
+        G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
+            card_eval_status_text(self,"extra",nil,nil,nil,{message = "Cursed!", colour = G.C.PURPLE})
+        return true end }))
+
+        if G.hand and #G.hand.highlighted == 0 then
+            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
+                
+
+                
+                local front = pseudorandom_element(G.P_CARDS, pseudoseed('CurseLockedFront'))
+                G.playing_card = (G.playing_card and G.playing_card + 1) or 1
+                local cardLoc = Card(G.play.T.x + G.play.T.w/2, G.play.T.y, G.CARD_W, G.CARD_H, front, G.P_CENTERS.m_TGTM_Locked, {playing_card = G.playing_card})
+                cardLoc:start_materialize({G.C.SECONDARY_SET.Enhanced})
+                table.insert(G.playing_cards, cardLoc)
+                card_eval_status_text(cardLoc,"extra",nil,nil,nil,{message = "Locked!", colour = G.C.PURPLE})
+                G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
+                    print(cardLoc)
+                    G.hand:emplace(cardLoc, nil, false)
+                return true end }))
+            return true end }))
+
+        elseif G.hand then
+            for i = 1, #G.hand.highlighted do
+                G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
+                    local CardRef = G.hand.highlighted[i]
+                    card_eval_status_text(CardRef,"extra",nil,nil,nil,{message = "Locked!", colour = G.C.PURPLE})
+                    G.hand.highlighted[i]:flip();play_sound('card1', percent);G.hand.highlighted[i]:juice_up(0.3, 0.3)
+                    G.hand.highlighted[i]:set_ability(G.P_CENTERS["m_TGTM_Locked"])
+                    G.hand.highlighted[i]:flip()
+                return true end }))
+            end
+        else 
+            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
+                card_eval_status_text(self,"extra",nil,nil,nil,{message = "Locked!", colour = G.C.PURPLE})
+                local LockedSpawn = Card(G.play.T.x + G.play.T.w/2, G.play.T.y, G.CARD_W, G.CARD_H, front, G.P_CENTERS.m_TGTM_Locked, {playing_card = G.playing_card})
+                LockedSpawn:add_to_deck()
+            return true end }))
         end
+
+
+        
+    elseif (G.GAME.TGTMCurseChance > 0) and (self.ability.set == 'Planet') and (pseudorandom(pseudoseed("Curse")) < G.GAME.TGTMCurseChance) then
+        
+
+        
+        G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
+            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
+                card_eval_status_text(self,"extra",nil,nil,nil,{message = "Cursed!", colour = G.C.PURPLE})
+            return true end }))
+            local handname = self.ability.consumeable.hand_type
+            print("HANDNAME:", handname)
+            if G.GAME.hands[handname].level > 1 then
+                update_hand_text({sound = 'button', volume = 0.7, pitch = 0.8, delay = 0.3}, {handname=localize(self.ability.consumeable.hand_type, 'poker_hands'),chips = G.GAME.hands[self.ability.consumeable.hand_type].chips, mult = G.GAME.hands[self.ability.consumeable.hand_type].mult, level=G.GAME.hands[self.ability.consumeable.hand_type].level})
+                self.triggered = true
+                level_up_hand(self.children.animatedSprite, handname, nil, -1)mmmmm
+                update_hand_text({sound = 'button', volume = 0.7, pitch = 1.1, delay = 0}, {mult = 0, chips = 0, handname = '', level = ''})
+            end 
+        return true end }))
+        
+    else
+        UseRef(self,args) 
     end
-    UseRef(self,args)
 
 end
