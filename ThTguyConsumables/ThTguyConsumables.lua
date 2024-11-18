@@ -349,7 +349,7 @@ function Card:use_consumeable(args)
                 return true end }))
             return true end }))
 
-        elseif G.STATE == G.STATES.PLAY_TAROT and #G.hand.cards ~= 0 then
+        elseif #G.hand.cards ~= 0 then
             print(G.STATE)
             print(G.STATES.SELECTING_HAND)
             print("G.hand and G.STATES == G.STATES.SELECTING_HAND")
@@ -367,20 +367,6 @@ function Card:use_consumeable(args)
                 return true end }))
             end
         else 
-            --[[
-            print(G.STATE)
-            print(G.STATES.SELECTING_HAND)
-            print("No G.hand and No G.STATES == G.STATES.SELECTING_HAND")
-            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
-                card_eval_status_text(self,"extra",nil,nil,nil,{message = "Blank!", colour = G.C.PURPLE})
-                local LockedSpawn = Card(G.play.T.x + G.play.T.w/2, G.play.T.y, G.CARD_W, G.CARD_H, front, G.P_CENTERS.m_TGTM_Blank, {playing_card = G.playing_card})
-                --LockedSpawn:add_to_deck()
-                G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
-                    G.deck:emplace(LockedSpawn, nil, false)
-                    table.insert(G.playing_cards, LockedSpawn)
-                return true end }))
-            return true end }))
-            --]]
             local front = pseudorandom_element(G.P_CARDS, pseudoseed('CurseLockedFront'))
             G.playing_card = (G.playing_card and G.playing_card + 1) or 1
             local cardLoc = Card(G.play.T.x + G.play.T.w/2, G.play.T.y, G.CARD_W, G.CARD_H, front, G.P_CENTERS.m_TGTM_Blank, {playing_card = G.playing_card})
@@ -413,10 +399,52 @@ function Card:use_consumeable(args)
             end 
         return true end }))
         
-    elseif (G.GAME.TGTMCurseChance > 0) and (self.ability.set == 'Spectral') and (pseudorandom(pseudoseed("Curse")) < G.GAME.TGTMCurseChance)
-        
+    elseif (G.GAME.TGTMCurseChance > 0) and (self.ability.set == 'Spectral') and (pseudorandom(pseudoseed("Curse")) < G.GAME.TGTMCurseChance) then
+        local maxClear = 2
+        local cleared = 0
+
+
+        for k, v in pairs(G.playing_cards) do
+
+            if v.edition or v.config.center ~= G.P_CENTERS.c_base or v.seal then
+                print(v.edition)
+                print(v.config.center ~= G.P_CENTERS.c_base)
+                print(v.seal)
+
+                if cleared < maxClear then
+
+                    if v.area.config.type == 'deck' then
+                        draw_card(G.deck,G.hand, 1, 'up', true, v, nil, true)
+                    end
+                    
+                    G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
+
+                        G.play:emplace(v)
+
+                    return true end }))
+                    
+
+                    G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.5,func = function()
+                        table.remove(G.playing_cards, k)
+                        card_eval_status_text(v,"extra",nil,nil,nil,{message = "Destroyed!", colour = G.C.BLUE})
+                        if v.ability.name == 'Glass Card' then 
+                            v:shatter()
+                        else
+                            v:start_dissolve(nil)
+                        end
+
+                    return true end }))
+
+                    
+                end
+                cleared = cleared + 1
+
+            end
+        end
+
     else    
     UseRef(self,args) 
     end
 
 end
+--mmmmm
