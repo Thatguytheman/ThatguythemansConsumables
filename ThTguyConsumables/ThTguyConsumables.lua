@@ -146,6 +146,7 @@ SMODS.Consumable{
 
 ]]
 
+--blank
 SMODS.Consumable{
     set_ability = function(self, card, initial, delay_sprites)
         card:set_edition("e_negative")
@@ -154,7 +155,7 @@ SMODS.Consumable{
 	discovered = true,
     loc_txt = {
         name = "Blank",
-        text = {"Spawn a rune", "50% chance to not get destroyed when used", "+5% chance for {C:purple}cursed{} cards"}
+        text = {"Spawn a {C:purple}rune{}", "{C:red}50% chance to not get destroyed when used{}", "{C:attention}+5%{} chance for {C:purple}cursed{} cards"}
     },
 	atlas = "runes",
     set = "Runes",
@@ -164,14 +165,27 @@ SMODS.Consumable{
     config = {},
     cost = 4,
     order = 1,
+    keep_on_use = function(self, card)
+        local akep = pseudorandom(pseudoseed("CurseStay")) <= 0.5
+        if akep then
+            card_eval_status_text(card,"extra",nil,nil,nil,{message = "Kept!", colour = G.C.PURPLE})
+        end
+        return akep
+    end,
     can_use = function(self, card)
         return true
     end,
     use = function(self, card, area, copier)
         G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
             
-            G.GAME.TGTMCurseChance = 1
+            
+            G.GAME.TGTMCurseChance = G.GAME.TGTMCurseChance + 0.05
 
+            local card = create_card("Runes", G.consumeables, nil, nil, nil, nil, nil, "TGTM_runes")
+            print(card.ability.name)
+            card:add_to_deck()
+            G.consumeables:emplace(card)
+            end
 
 
         return true end }))
@@ -399,7 +413,7 @@ function Card:use_consumeable(args)
             end 
         return true end }))
         
-    elseif (G.GAME.TGTMCurseChance > 0) and (self.ability.set == 'Spectral') and (pseudorandom(pseudoseed("Curse")) < G.GAME.TGTMCurseChance) then
+    elseif (G.GAME.TGTMCurseChance > 0) and (self.ability.set == 'Spectral') and self.ability.name ~= "The Soul" and (pseudorandom(pseudoseed("Curse")) < G.GAME.TGTMCurseChance) then
         local maxClear = 2
         local cleared = 0
 
@@ -414,19 +428,28 @@ function Card:use_consumeable(args)
                 if cleared < maxClear then
 
                     if v.area.config.type == 'deck' then
-                        draw_card(G.deck,G.hand, 1, 'up', true, v, nil, true)
-                    end
+                        if #G.hand.cards ~= 0 then
+                            draw_card(G.deck,G.hand, 1, 'up', true, v, nil, true)
+                        else
+                            draw_card(G.deck,G.play, 1, 'up', true, v, nil, true)
+                        end
+
+
+                    end 
                     
                     G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
 
-                        G.play:emplace(v)
+                        --G.play:emplace(v)
 
                     return true end }))
                     
+                    card_eval_status_text(v,"extra",nil,nil,nil,{message = "Destroyed!", colour = G.C.BLUE})
+
+                    
 
                     G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.5,func = function()
+                        delay(0.5)
                         table.remove(G.playing_cards, k)
-                        card_eval_status_text(v,"extra",nil,nil,nil,{message = "Destroyed!", colour = G.C.BLUE})
                         if v.ability.name == 'Glass Card' then 
                             v:shatter()
                         else
@@ -439,6 +462,27 @@ function Card:use_consumeable(args)
                 end
                 cleared = cleared + 1
 
+            end
+        end
+
+        if cleared < maxClear then
+            for la = 1, maxClear do
+                local front = pseudorandom_element(G.P_CARDS, pseudoseed('CurseLockedFront'))
+                G.playing_card = (G.playing_card and G.playing_card + 1) or 1
+                local cardLoc = Card(G.play.T.x + G.play.T.w/2, G.play.T.y, G.CARD_W, G.CARD_H, front, G.P_CENTERS.m_TGTM_Blank, {playing_card = G.playing_card})
+                cardLoc:start_materialize({G.C.SECONDARY_SET.Enhanced})
+                table.insert(G.playing_cards, cardLoc)
+                card_eval_status_text(cardLoc,"extra",nil,nil,nil,{message = "Blank!", colour = G.C.PURPLE})
+                G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
+                    print(cardLoc)
+                    G.deck:emplace(cardLoc, nil, false)
+                return true end }))
+            end
+        end
+
+        for ke, va in pairs(G.hand.cards) do
+            for i, j in pairs(va.ability) do
+                print(ke,i,mj)
             end
         end
 
