@@ -39,7 +39,7 @@ function Game:start_run(args)
     --Chance for a card to get cursed
     G.GAME.TGTMCurseChance = G.GAME.TGTMCurseChance or 0
     --Buff Face Card for a round
-    G.GAME.TGTMFaceBuff = G.GAME.TGTMFaceBuff or 0
+    G.GAME.TGTMFaceBuff = G.GAME.TGTMFaceBuff or false
 end
 
 SMODS.Enhancement{
@@ -356,7 +356,7 @@ SMODS.Consumable{
 	discovered = true,
     loc_txt = {
         name = "Mannaz",
-        text = {"Face cards gives 1.5x mult", "Number cards debuffed","Only for this round"}
+        text = {"Scored face cards give 1.5x mult", "-50 chips","Only for this round","when used, becomes a negative Joker"}
     },
 	atlas = "runes",
     set = "Runes",
@@ -367,16 +367,62 @@ SMODS.Consumable{
     cost = 4,
     order = 1,
     can_use = function(self, card)
-        return G.STATE == G.STATES.SELECTING_HAND
+        return (G.STATE == G.STATES.SELECTING_HAND) and (G.GAME.TGTMFaceBuff == false)
     end,
     use = function(self, card, area, copier)
         G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
-
+            G.GAME.TGTMFaceBuff = true
+            add_joker("j_TGTM_MannazJoker")
         return true end }))
     end,
 }
+--mannaz joker
+SMODS.Joker{
+    set_ability = function(self, card, initial, delay_sprites)
+        card:set_edition("e_negative")
+        card.ability.eternal = true
+    end,
+    unlocked = true,
+	discovered = true,
+    loc_txt = {
+        name = "Mannaz",
+        text = {"Scored face cards give 1.5x mult", "-50 chips","Destroyed after round"}
+    },
+    atlas = "runes",
+    name = "runes-MannazJoker",
+    key = "MannazJoker",
+    pos = {x = 0, y = 1},
+    rarity = 3,
+    blueprint_compat = true,
+    calculate = function(self, card, context)
+        
+        if context.individual then
+            if context.cardarea == G.play then
+                if (context.other_card:get_id() == 11 or context.other_card:get_id() == 12 or context.other_card:get_id() == 13) then
+                    return {
+                        x_mult = 1.5,
+                        colour = G.C.RED,
+                        card = card
+                    }
+                end
+            end
+        end
+        if context.joker_main then
+            print(hand_chips)
+            local chehe = -50
+            if hand_chips <= 50 then
+                chehe = -(hand_chips - 1)
+            end
+            return {
 
+                message = {"-50"},
+                chip_mod = chehe
+                
+            }
+        end
 
+    end
+}
 
 
 
@@ -390,6 +436,17 @@ function end_round()
   endroundref()
   G.hand:change_size(G.GAME.TGTMchangeHandSize)
   G.GAME.TGTMchangeHandSize = 0
+  if G.GAME.TGTMFaceBuff then
+    for k, v in pairs(G.jokers.cards) do
+        if v.ability.name == "runes-MannazJoker" then
+            v.ability.eternal = false
+            v:juice_up(0.8, 0.8)
+            v:start_dissolve({HEX("57ecab")}, nil, 1.6)
+        end
+    end
+  end
+  G.GAME.TGTMFaceBuff = false
+
 end
 --
 local ATDref = Card.add_to_deck
