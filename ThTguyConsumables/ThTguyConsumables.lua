@@ -38,6 +38,8 @@ function Game:start_run(args)
     IntrestAmt = G.GAME.interest_cap
     --Chance for a card to get cursed
     G.GAME.TGTMCurseChance = G.GAME.TGTMCurseChance or 0
+    --Buff Face Card for a round
+    G.GAME.TGTMFaceBuff = G.GAME.TGTMFaceBuff or 0
 end
 
 SMODS.Enhancement{
@@ -185,7 +187,7 @@ SMODS.Consumable{
             print(card.ability.name)
             card:add_to_deck()
             G.consumeables:emplace(card)
-            end
+
 
 
         return true end }))
@@ -303,6 +305,84 @@ SMODS.Consumable{
         return true end }))
     end,
 }
+
+--Inguz
+SMODS.Consumable{
+    set_ability = function(self, card, initial, delay_sprites)
+        card:set_edition("e_negative")
+    end,
+	unlocked = true,
+	discovered = true,
+    loc_vars = function(self, info_queue, card)
+		return { vars = {G.GAME and (G.GAME.interest_cap / 5) or '???'}}
+	end,
+    loc_txt = {
+        name = "Inguz",
+        text = {"Lose {C:red}interest cap{} Dollars {C:inactive}(-$#1#){}", "{C:attention}+20%{} of Interest cap"}
+    },
+	atlas = "runes",
+    set = "Runes",
+    name = "runes-inguz",
+    key = "inguz",
+    pos = {x = 4, y = 0},
+    config = {},
+    cost = 4,
+    order = 1,
+    can_use = function(self, card)
+        return true
+    end,
+    use = function(self, card, area, copier)
+        G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
+            ease_dollars(-(G.GAME.interest_cap/5))
+            
+            
+            print(G.GAME.interest_cap)
+            --reduce by 20% if more than 1 intrest cap
+            if G.GAME.interest_cap > 5 then
+                G.GAME.interest_cap = math.floor((G.GAME.interest_cap/5) * 1.2) * 5
+            end
+
+            print(G.GAME.interest_cap)
+
+        return true end }))
+    end,
+}
+--Mannaz
+SMODS.Consumable{
+    set_ability = function(self, card, initial, delay_sprites)
+        card:set_edition("e_negative")
+    end,
+	unlocked = true,
+	discovered = true,
+    loc_txt = {
+        name = "Mannaz",
+        text = {"Face cards gives 1.5x mult", "Number cards debuffed","Only for this round"}
+    },
+	atlas = "runes",
+    set = "Runes",
+    name = "runes-Mannaz",
+    key = "Mannaz",
+    pos = {x = 0, y = 1},
+    config = {},
+    cost = 4,
+    order = 1,
+    can_use = function(self, card)
+        return G.STATE == G.STATES.SELECTING_HAND
+    end,
+    use = function(self, card, area, copier)
+        G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
+
+        return true end }))
+    end,
+}
+
+
+
+
+
+
+
+
 
 --Taking control of round end to change stuff
 local endroundref = end_round
