@@ -27,6 +27,55 @@ Runes and meanings:
 ]]
 local IntrestAmt = 0
 
+--lets dissect this
+TGTMButton = {config_tab = function()end, config_file ={CursedRunes = false}}
+
+if nativefs.read(lovely.mod_dir.."/config.lua") then
+    TGTMButton.config_file = STR_UNPACK(nativefs.read(lovely.mod_dir.."/config.lua"))
+end
+
+TGTMButton.config_tab = function()
+    return {
+      n = G.UIT.ROOT,
+      config = {emboss = 0.05, minh = 6, r = 0.1, minw = 10, align = "cm", padding = 0.2, colour = G.C.PURPLE},
+      nodes = {
+        {
+          n=G.UIT.R, 
+          config= {align = "cm"}, 
+          nodes={
+            {
+              n=G.UIT.O, 
+              config={object = DynaText({string = "Beware traveller...", colours = {G.C.WHITE}, shadow = true, scale = 0.4})}
+            },
+          }
+        },
+        {
+            n=G.UIT.R, 
+            config= {align = "cm"}, 
+            nodes={
+              {
+                n=G.UIT.O, 
+                config={object = DynaText({string = "Lest you want to be cursed..", colours = {G.C.WHITE}, shadow = true, scale = 0.4})}
+              },
+            }
+        },
+        create_toggle({
+          label = "Disable Runes Downsides..?", 
+          ref_table = TGTMButton.config_file, 
+          ref_value = "CursedRunes",
+          callback = function(_set_toggle)
+            nativefs.write(lovely.mod_dir .. "/config.lua", STR_PACK(TGTMButton.config_file))
+            if nativefs.read(lovely.mod_dir.."/config.lua") then
+                TGTMButton.config_file = STR_UNPACK(nativefs.read(lovely.mod_dir.."/config.lua"))
+            end
+          end
+        }),
+      }
+    }
+end
+
+
+
 --Globals
 local startRef = Game.start_run
 function Game:start_run(args)
@@ -40,6 +89,8 @@ function Game:start_run(args)
     G.GAME.TGTMCurseChance = G.GAME.TGTMCurseChance or 0
     --Buff Face Card for a round
     G.GAME.TGTMFaceBuff = G.GAME.TGTMFaceBuff or false
+
+    
 end
 
 SMODS.Enhancement{
@@ -142,10 +193,10 @@ SMODS.Consumable{
 	discovered = true,
     loc_txt = {
         name = "NAME",
-        text = {"DESC"}
+        text = {"#1#"}
     },
     loc_vars = function(self, info_queue, card)
-		return {vars = {}}
+		return {vars = {(G.TGTMCURSEDRUNES and "CURSED DESC") or "NON CURSED DESC"}}
 	end,
     config = {extra = {}},
 	atlas = "runes",
@@ -160,7 +211,12 @@ SMODS.Consumable{
     end,
     use = function(self, card, area, copier)
         G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
-            ON USE
+            
+            --UPSIDE
+            if G.GAME.TGTMCURSEDRUNES then
+                --DOWNSIDE
+            end
+
         return true end }))
     end,
 }
@@ -230,6 +286,7 @@ SMODS.Consumable{
     end,
 	unlocked = true,
 	discovered = true,
+    --[[
     loc_txt = {
         name = "Laguz",
         text = {"Gain {C:attention}#1#{} discard for this round"}
@@ -237,6 +294,14 @@ SMODS.Consumable{
     loc_vars = function(self, info_queue, card)
         return {vars = {card.ability.extra.discards}}
     end,
+    --]]
+    loc_txt = {
+        name = "NAME",
+        text = {"#1#"}
+    },
+    loc_vars = function(self, info_queue, card)
+		return {vars = {(G.TGTMCURSEDRUNES and "CURSED DESC") or "NON CURSED DESC"}}
+	end,
 	atlas = "runes",
     set = "Runes",
     name = "runes-laguz",
@@ -436,23 +501,24 @@ SMODS.Consumable{
     end,
     use = function(self, card, area, copier)
         G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
-            
-            local NonNegativeJokers = {}
-            ease_ante(card.ability.extra.AnteChange)
-            for k, v in pairs(G.jokers.cards) do
-                if v.ability.set == 'Joker' and (v.config.center ~= G.P_CENTERS.e_negative) then
-                    table.insert(NonNegativeJokers, v)
-                    print(v.ability)
+            if G.GAME.round_resets.ante > 0 then 
+                local NonNegativeJokers = {}
+                ease_ante(card.ability.extra.AnteChange)
+                for k, v in pairs(G.jokers.cards) do
+                    if v.ability.set == 'Joker' and (v.config.center ~= G.P_CENTERS.e_negative) then
+                        table.insert(NonNegativeJokers, v)
+                        print(v.ability)
+                    end
+                end
+
+                if NonNegativeJokers then
+                    local BreakJoker = pseudorandom_element(NonNegativeJokers, pseudoseed("BreakEhwaz"))
+                    if BreakJoker then
+                        BreakJoker:set_edition("e_TGTM_Broken")
+                        card_eval_status_text(BreakJoker,"extra",nil,nil,nil,{message = "Broken!", colour = G.C.CHIPS})
+                    end
                 end
             end
-
-            if NonNegativeJokers then
-                local BreakJoker = pseudorandom_element(NonNegativeJokers, pseudoseed("BreakEhwaz"))
-                BreakJoker:set_edition("e_TGTM_Broken")
-                card_eval_status_text(BreakJoker,"extra",nil,nil,nil,{message = "Broken!", colour = G.C.CHIPS})
-                
-            end
-
             
 
         return true end }))
