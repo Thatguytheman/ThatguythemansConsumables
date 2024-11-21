@@ -64,6 +64,7 @@ SMODS.Enhancement{
     
 }
 
+
 SMODS.Edition{
     --0.75X mult
     key = "Cursed",
@@ -77,6 +78,22 @@ SMODS.Edition{
     discovered = true,
     config = {
         x_mult = 0.75
+    }
+}
+
+SMODS.Edition{
+    --0.5X mult
+    key = "Broken",
+    shader = false,
+    loc_txt = {
+        name = "Broken",
+        label = "Broken",
+        text = {"{X:mult,C:black} X0.5{} mult"}
+    },
+    unlocked = true,
+    discovered = true,
+    config = {
+        x_mult = 0.5
     }
 }
 
@@ -119,7 +136,7 @@ base for cards
 
 SMODS.Consumable{
     set_ability = function(self, card, initial, delay_sprites)
-        card:set_edition("e_negative")
+        card:set_edition("e_negative")--,true)
     end,
 	unlocked = true,
 	discovered = true,
@@ -127,12 +144,15 @@ SMODS.Consumable{
         name = "NAME",
         text = {"DESC"}
     },
+    loc_vars = function(self, info_queue, card)
+		return {vars = {}}
+	end,
+    config = {extra = {}},
 	atlas = "runes",
     set = "Runes",
     name = "runes-NAME",
     key = "name",
     pos = {x = 0, y = 0},
-    config = {},
     cost = 4,
     order = 1,
     can_use = function(self, card)
@@ -151,24 +171,33 @@ SMODS.Consumable{
 --blank
 SMODS.Consumable{
     set_ability = function(self, card, initial, delay_sprites)
-        card:set_edition("e_negative")
+        
+        --print(card)
+        --print(card.area)
+        --print(card.area.config)
+        --print(card.area.config.collection)
+        card:set_edition("e_negative")--)--, card.area.config.collection and true, card.area.config.collection and true)
     end,
 	unlocked = true,
 	discovered = true,
+    config = { extra = {Curse = 5, Chance = 2} },
     loc_txt = {
         name = "Blank",
-        text = {"Spawn a {C:purple}rune{}", "{C:red}50% chance to not get destroyed when used{}", "{C:attention}+5%{} chance for {C:purple}cursed{} cards"}
+        text = {"Spawn a {C:purple}rune{}", "{C:red}#2# in #3# chance to not get destroyed when used{}", "{C:attention}+#1#%{} chance for {C:purple}cursed{} cards"}
     },
+    loc_vars = function(self, info_queue, card)
+        return {vars = {card.ability.extra.Curse, G.GAME.probabilities.normal, card.ability.extra.Chance}, }
+    end,
 	atlas = "runes",
     set = "Runes",
     name = "runes-blank",
     key = "blank",
     pos = {x = 0, y = 0},
-    config = {},
+
     cost = 4,
     order = 1,
     keep_on_use = function(self, card)
-        local akep = pseudorandom(pseudoseed("CurseStay")) <= 0.5
+        local akep = pseudorandom(pseudoseed("CurseStay")) < G.GAME.probabilities.normal/card.ability.extra.Chance
         if akep then
             card_eval_status_text(card,"extra",nil,nil,nil,{message = "Kept!", colour = G.C.PURPLE})
         end
@@ -181,10 +210,10 @@ SMODS.Consumable{
         G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
             
             
-            G.GAME.TGTMCurseChance = G.GAME.TGTMCurseChance + 0.05
+            G.GAME.TGTMCurseChance = G.GAME.TGTMCurseChance + (card.ability.extra.Curse / 100)
 
             local card = create_card("Runes", G.consumeables, nil, nil, nil, nil, nil, "TGTM_runes")
-            print(card.ability.name)
+            --print(card.ability.name)
             card:add_to_deck()
             G.consumeables:emplace(card)
 
@@ -197,20 +226,23 @@ SMODS.Consumable{
 --Laguz
 SMODS.Consumable{
     set_ability = function(self, card, initial, delay_sprites)
-        card:set_edition("e_negative")
+        card:set_edition("e_negative")--,true)
     end,
 	unlocked = true,
 	discovered = true,
     loc_txt = {
         name = "Laguz",
-        text = {"Gain {C:attention}1{} discard for this round"}
+        text = {"Gain {C:attention}#1#{} discard for this round"}
     },
+    loc_vars = function(self, info_queue, card)
+        return {vars = {card.ability.extra.discards}}
+    end,
 	atlas = "runes",
     set = "Runes",
     name = "runes-laguz",
     key = "laguz",
     pos = {x = 1, y = 0},
-    config = {},
+    config = {extra = {discards = 1}},
     cost = 4,
     order = 21,
     can_use = function(self, card)
@@ -220,7 +252,7 @@ SMODS.Consumable{
         G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
             --Add 1 discard
 
-            ease_discard(1)
+            ease_discard(card.ability.extra.discards)
             
             --G.GAME.TGTMchangeHandSize = G.GAME.TGTMchangeHandSize - 1
 
@@ -231,7 +263,7 @@ SMODS.Consumable{
 --Dagaz
 SMODS.Consumable{
     set_ability = function(self, card, initial, delay_sprites)
-        card:set_edition("e_negative")
+        card:set_edition("e_negative")--,true)
     end,
 	unlocked = true,
 	discovered = true,
@@ -252,6 +284,7 @@ SMODS.Consumable{
     end,
     use = function(self, card, area, copier)
         G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
+            card_eval_status_text(card,"extra",nil,nil,nil,{message = "Blind Disabled", colour = G.C.RED})
             --disable blind
             G.GAME.blind:disable()
             --No reward money
@@ -264,23 +297,23 @@ SMODS.Consumable{
 --Othala
 SMODS.Consumable{
     set_ability = function(self, card, initial, delay_sprites)
-        card:set_edition("e_negative")
+        card:set_edition("e_negative")--,true)
     end,
 	unlocked = true,
 	discovered = true,
     loc_vars = function(self, info_queue, card)
-		return { vars = {G.GAME and G.GAME.interest_cap or '???'}}
+		return { vars = {G.GAME and G.GAME.interest_cap or '???', card.ability.extra.MultDollars, card.ability.extra.percentChange}}
 	end,
     loc_txt = {
         name = "Othala",
-        text = {"Earn {C:attention}interest cap * 5{} Dollars {C:inactive}($#1#){}", "{C:red}-20%{} of Interest cap"}
+        text = {"Earn {C:attention}interest cap * #2#{} Dollars {C:inactive}($#1#){}", "{C:red}-#3#%{} of Interest cap"}
     },
 	atlas = "runes",
     set = "Runes",
     name = "runes-othala",
     key = "othala",
     pos = {x = 3, y = 0},
-    config = {},
+    config = {extra = {MultDollars = 5, percentChange = 20}},
     cost = 4,
     order = 23,
     can_use = function(self, card)
@@ -295,7 +328,7 @@ SMODS.Consumable{
             print(G.GAME.interest_cap)
             --reduce by 20% if more than 1 intrest cap
             if G.GAME.interest_cap > 5 then
-                G.GAME.interest_cap = math.floor((G.GAME.interest_cap/5) * 0.8) * 5
+                G.GAME.interest_cap = math.floor((G.GAME.interest_cap/5) * (1 - (card.ability.extra.percentChange / 100))) * 5
             end
 
             print(G.GAME.interest_cap)
@@ -309,23 +342,23 @@ SMODS.Consumable{
 --Inguz
 SMODS.Consumable{
     set_ability = function(self, card, initial, delay_sprites)
-        card:set_edition("e_negative")
+        card:set_edition("e_negative")--,true)
     end,
 	unlocked = true,
 	discovered = true,
     loc_vars = function(self, info_queue, card)
-		return { vars = {G.GAME and (G.GAME.interest_cap / 5) or '???'}}
+		return {vars = {G.GAME and math.floor(G.GAME.interest_cap/5) or '???', card.ability.extra.DollarsInt, card.ability.extra.IntPer}}
 	end,
     loc_txt = {
         name = "Inguz",
-        text = {"Lose {C:red}interest cap{} Dollars {C:inactive}(-$#1#){}", "{C:attention}+20%{} of Interest cap"}
+        text = {"{C:red}Set money to 0", "{C:attention}+#3#{} Interest per {C:attention}#2#${} lost {C:inactive}(+#1#){}"}
     },
 	atlas = "runes",
     set = "Runes",
     name = "runes-inguz",
     key = "inguz",
     pos = {x = 4, y = 0},
-    config = {},
+    config = {extra = {DollarsInt = 5, IntPer = 1}},
     cost = 4,
     order = 1,
     can_use = function(self, card)
@@ -333,37 +366,31 @@ SMODS.Consumable{
     end,
     use = function(self, card, area, copier)
         G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
-            ease_dollars(-(G.GAME.interest_cap/5))
-            
-            
-            print(G.GAME.interest_cap)
-            --reduce by 20% if more than 1 intrest cap
-            if G.GAME.interest_cap > 5 then
-                G.GAME.interest_cap = math.floor((G.GAME.interest_cap/5) * 1.2) * 5
-            end
-
-            print(G.GAME.interest_cap)
-
+            G.GAME.interest_cap = G.GAME.interest_cap + math.floor(G.GAME.interest_cap/5)
+            ease_dollars(-G.GAME.dollars)
         return true end }))
     end,
 }
 --Mannaz
 SMODS.Consumable{
     set_ability = function(self, card, initial, delay_sprites)
-        card:set_edition("e_negative")
+        card:set_edition("e_negative")--,true)
     end,
 	unlocked = true,
 	discovered = true,
     loc_txt = {
         name = "Mannaz",
-        text = {"Scored face cards give 1.5x mult", "-50 chips","Only for this round","when used, becomes a negative Joker"}
+        text = {"Scored face cards give {X:mult,C:white}#1#x{} mult", "{C:attention}#2#{} chips, {C:attention}#3#{} more per face card","Only for this round","when used, becomes a negative Joker"}
     },
+    loc_vars = function(self, info_queue, card)
+		return {vars = {card.ability.extra.FaceMult, card.ability.extra.BaseChip, card.ability.extra.FaceChip}}
+	end,
 	atlas = "runes",
     set = "Runes",
     name = "runes-Mannaz",
     key = "Mannaz",
-    pos = {x = 0, y = 1},
-    config = {},
+    pos = {x = 1, y = 1},
+    config = {extra = {FaceMult = 1.5, BaseChip = -20, FaceChip = -10}},
     cost = 4,
     order = 1,
     can_use = function(self, card)
@@ -376,32 +403,109 @@ SMODS.Consumable{
         return true end }))
     end,
 }
+
+--Ehwaz
+SMODS.Consumable{
+    set_ability = function(self, card, initial, delay_sprites)
+        card:set_edition("e_negative")--,true)
+    end,
+	unlocked = true,
+	discovered = true,
+    loc_txt = {
+        name = "Ehwaz",
+        text = {"{C:attention}#1# ante{}", "Break a random non-negative joker"}
+    },
+    loc_vars = function(self, info_queue, card)
+        info_queue[#info_queue + 1] = {
+            key = 'e_TGTM_Broken', 
+            set = 'Edition',
+            config = {extra = 1}
+          }
+		return {vars = {card.ability.extra.AnteChange}}
+	end,
+	atlas = "runes",
+    set = "Runes",
+    name = "runes-Ehwaz",
+    key = "Ehwaz",
+    pos = {x = 0, y = 1},
+    config = {extra = {AnteChange = -1}},
+    cost = 4,
+    order = 1,
+    can_use = function(self, card)
+        return true
+    end,
+    use = function(self, card, area, copier)
+        G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
+            
+            local NonNegativeJokers = {}
+            ease_ante(card.ability.extra.AnteChange)
+            for k, v in pairs(G.jokers.cards) do
+                if v.ability.set == 'Joker' and (v.config.center ~= G.P_CENTERS.e_negative) then
+                    table.insert(NonNegativeJokers, v)
+                    print(v.ability)
+                end
+            end
+
+            if NonNegativeJokers then
+                local BreakJoker = pseudorandom_element(NonNegativeJokers, pseudoseed("BreakEhwaz"))
+                BreakJoker:set_edition("e_TGTM_Broken")
+                card_eval_status_text(BreakJoker,"extra",nil,nil,nil,{message = "Broken!", colour = G.C.CHIPS})
+                
+            end
+
+            
+
+        return true end }))
+    end,
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 --mannaz joker
 SMODS.Joker{
     set_ability = function(self, card, initial, delay_sprites)
-        card:set_edition("e_negative")
+        card:set_edition("e_negative")--,true)
         card.ability.eternal = true
     end,
     unlocked = true,
 	discovered = true,
     loc_txt = {
         name = "Mannaz",
-        text = {"Scored face cards give 1.5x mult", "-50 chips","Destroyed after round"}
+        text = {"Scored face cards give {X:mult,C:white}#1#x{} mult", "{C:attention}#2#{} chips, {C:attention}#3#{} more per face card","Destroyed after round"}
     },
+    loc_vars = function(self, info_queue, card)
+		return {vars = {card.ability.extra.FaceMult, card.ability.extra.BaseChip, card.ability.extra.FaceChip}}
+	end,
+    config = {extra = {FaceMult = 1.5, BaseChip = -20, FaceChip = -10}},
     atlas = "runes",
     name = "runes-MannazJoker",
     key = "MannazJoker",
-    pos = {x = 0, y = 1},
+    pos = {x = 1, y = 1},
     rarity = 3,
     blueprint_compat = true,
     calculate = function(self, card, context)
         
+
+
         if context.individual then
             if context.cardarea == G.play then
                 if (context.other_card:get_id() == 11 or context.other_card:get_id() == 12 or context.other_card:get_id() == 13) then
+
+                    card:juice_up()
+
                     return {
-                        x_mult = 1.5,
-                        colour = G.C.RED,
+                        x_mult = card.ability.extra.FaceMult,
+                        chips = card.ability.extra.FaceChip,
                         card = card
                     }
                 end
@@ -409,15 +513,20 @@ SMODS.Joker{
         end
         if context.joker_main then
             print(hand_chips)
-            local chehe = -50
-            if hand_chips <= 50 then
+            
+
+            
+
+                
+            local chehe = card.ability.extra.BaseChip
+            if hand_chips <= -(card.ability.extra.BaseChip) then
                 chehe = -(hand_chips - 1)
             end
             return {
 
-                message = {"-50"},
-                chip_mod = chehe
-                
+                message = {""..card.ability.extra.BaseChip},
+                chip_mod = chehe,
+                colour = G.C.CHIPS
             }
         end
 
@@ -495,7 +604,7 @@ function Card:use_consumeable(args)
                 table.insert(G.playing_cards, cardLoc)
                 card_eval_status_text(cardLoc,"extra",nil,nil,nil,{message = "Blank!", colour = G.C.PURPLE})
                 G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
-                    print(cardLoc)
+                    --print(cardLoc)
                     G.hand:emplace(cardLoc, nil, false)
                 return true end }))
             return true end }))
@@ -525,7 +634,7 @@ function Card:use_consumeable(args)
             table.insert(G.playing_cards, cardLoc)
             card_eval_status_text(cardLoc,"extra",nil,nil,nil,{message = "Blank!", colour = G.C.PURPLE})
             G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
-                print(cardLoc)
+                --print(cardLoc)
                 G.deck:emplace(cardLoc, nil, false)
             return true end }))
         end
@@ -611,7 +720,7 @@ function Card:use_consumeable(args)
                 table.insert(G.playing_cards, cardLoc)
                 card_eval_status_text(cardLoc,"extra",nil,nil,nil,{message = "Blank!", colour = G.C.PURPLE})
                 G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
-                    print(cardLoc)
+                    --print(cardLoc)
                     G.deck:emplace(cardLoc, nil, false)
                 return true end }))
             end
