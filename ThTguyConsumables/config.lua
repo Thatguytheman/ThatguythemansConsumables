@@ -1,0 +1,3 @@
+return {
+    ["CursedRunes"] = false
+}

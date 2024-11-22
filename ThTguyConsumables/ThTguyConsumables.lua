@@ -28,49 +28,50 @@ Runes and meanings:
 local IntrestAmt = 0
 
 --lets dissect this
-TGTMButton = {config_tab = function()end, config_file ={CursedRunes = false}}
+TGTMConsumables = {}
 
-if nativefs.read(lovely.mod_dir.."/config.lua") then
-    TGTMButton.config_file = STR_UNPACK(nativefs.read(lovely.mod_dir.."/config.lua"))
-end
+TGTMConsumables.config = SMODS.current_mod.config
 
-TGTMButton.config_tab = function()
+SMODS.current_mod.config_tab = function()
     return {
-      n = G.UIT.ROOT,
-      config = {emboss = 0.05, minh = 6, r = 0.1, minw = 10, align = "cm", padding = 0.2, colour = G.C.PURPLE},
-      nodes = {
-        {
-          n=G.UIT.R, 
-          config= {align = "cm"}, 
-          nodes={
+        n = G.UIT.ROOT,
+        config = {emboss = 0.05, minh = 6, r = 0.1, minw = 10, align = "cm", padding = 0.2, colour = G.C.PURPLE},
+        nodes = {
             {
-              n=G.UIT.O, 
-              config={object = DynaText({string = "Beware traveller...", colours = {G.C.WHITE}, shadow = true, scale = 0.4})}
+                n=G.UIT.R,
+                config= {align = "tm"}, 
+                nodes= {
+                    {
+                        n=G.UIT.O, 
+                        config={object = DynaText({string = "Beware traveller...", colours = {G.C.WHITE}, shadow = true, scale = 0.4})}
+                    },
+                },
             },
-          }
-        },
-        {
-            n=G.UIT.R, 
-            config= {align = "cm"}, 
-            nodes={
-              {
-                n=G.UIT.O, 
-                config={object = DynaText({string = "Lest you want to be cursed..", colours = {G.C.WHITE}, shadow = true, scale = 0.4})}
-              },
-            }
-        },
-        create_toggle({
-          label = "Disable Runes Downsides..?", 
-          ref_table = TGTMButton.config_file, 
-          ref_value = "CursedRunes",
-          callback = function(_set_toggle)
-            nativefs.write(lovely.mod_dir .. "/config.lua", STR_PACK(TGTMButton.config_file))
-            if nativefs.read(lovely.mod_dir.."/config.lua") then
-                TGTMButton.config_file = STR_UNPACK(nativefs.read(lovely.mod_dir.."/config.lua"))
-            end
-          end
-        }),
-      }
+            {
+                n=G.UIT.R,
+                config= {align = "tm"}, 
+                nodes= {
+                    {
+                        n=G.UIT.O,
+                        config={object = DynaText({string = "Lest you want to be cursed ...", colours = {G.C.WHITE}, shadow = true, scale = 0.4})}
+                    }
+                }
+            },
+                    
+            {
+                n=G.UIT.R,
+                config= {align = "cm"}, 
+                nodes={
+                    create_toggle({
+                        label = "Disable Rune Downsides..?", 
+                        ref_table = TGTMConsumables.config, 
+                        ref_value = "CursedRunes",
+                    }),
+                }
+            },
+            
+        
+        }
     }
 end
 
@@ -174,6 +175,7 @@ SMODS.ConsumableType{
         name = "Runes",
         collection = "Runes"
     },
+    --class_prefix = "r",
     can_stack = true,
     can_divide = true
 
@@ -191,14 +193,12 @@ SMODS.Consumable{
     end,
 	unlocked = true,
 	discovered = true,
-    loc_txt = {
-        name = "NAME",
-        text = {"#1#"}
-    },
     loc_vars = function(self, info_queue, card)
-		return {vars = {(G.TGTMCURSEDRUNES and "CURSED DESC") or "NON CURSED DESC"}}
+
+
+		return {vars = { !!VARS!! }, key = "r_rune_!!NAME!!" .. TGTMConsumables.config.CursedRunes and "C" or ""}
 	end,
-    config = {extra = {}},
+    config = {extra = { !!VARS!! }},
 	atlas = "runes",
     set = "Runes",
     name = "runes-NAME",
@@ -207,14 +207,16 @@ SMODS.Consumable{
     cost = 4,
     order = 1,
     can_use = function(self, card)
-        CONDITION FOR USING
+        !!CONDITION FOR USING!!
     end,
     use = function(self, card, area, copier)
         G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
             
-            --UPSIDE
-            if G.GAME.TGTMCURSEDRUNES then
-                --DOWNSIDE
+            --!!UPSIDE!!
+            if TGTMConsumables.config.CursedRunes then
+                --!!DOWNSIDE!!
+            else
+                G.GAME.TGTMCurseChance = G.GAME.TGTMCurseChance + (RuneCurse / 100)
             end
 
         return true end }))
@@ -222,7 +224,10 @@ SMODS.Consumable{
 }
 
 
+
 ]]
+
+RuneCurse = 1
 
 --blank
 SMODS.Consumable{
@@ -232,7 +237,7 @@ SMODS.Consumable{
         --print(card.area)
         --print(card.area.config)
         --print(card.area.config.collection)
-        card:set_edition("e_negative")--)--, card.area.config.collection and true, card.area.config.collection and true)
+        card:set_edition("e_negative", true)
     end,
 	unlocked = true,
 	discovered = true,
@@ -272,6 +277,7 @@ SMODS.Consumable{
             --print(card.ability.name)
             card:add_to_deck()
             G.consumeables:emplace(card)
+            
 
 
 
@@ -286,21 +292,13 @@ SMODS.Consumable{
     end,
 	unlocked = true,
 	discovered = true,
-    --[[
-    loc_txt = {
-        name = "Laguz",
-        text = {"Gain {C:attention}#1#{} discard for this round"}
-    },
     loc_vars = function(self, info_queue, card)
-        return {vars = {card.ability.extra.discards}}
-    end,
-    --]]
-    loc_txt = {
-        name = "NAME",
-        text = {"#1#"}
-    },
-    loc_vars = function(self, info_queue, card)
-		return {vars = {(G.TGTMCURSEDRUNES and "CURSED DESC") or "NON CURSED DESC"}}
+
+        local AmtDisc = card.ability.extra.discards
+        if TGTMConsumables.config.CursedRunes then AmtDisc = AmtDisc * 2 end
+        print("r_rune_laguz" .. (TGTMConsumables.config.CursedRunes and "C" or ""))
+        --print(Runes.class_prefix)
+		return {vars = {AmtDisc}, key = "laguz"}-- .. (TGTMConsumables.config.CursedRunes and "C" or "")}
 	end,
 	atlas = "runes",
     set = "Runes",
