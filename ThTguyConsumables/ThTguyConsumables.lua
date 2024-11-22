@@ -189,14 +189,12 @@ base for cards
 
 SMODS.Consumable{
     set_ability = function(self, card, initial, delay_sprites)
-        card:set_edition("e_negative")--,true)
+        card:set_edition("e_negative", true)
     end,
 	unlocked = true,
 	discovered = true,
     loc_vars = function(self, info_queue, card)
-
-
-		return {vars = { !!VARS!! }, key = "r_rune_!!NAME!!" .. TGTMConsumables.config.CursedRunes and "C" or ""}
+		return {vars = { !!VARS!! }, key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
 	end,
     config = {extra = { !!VARS!! }},
 	atlas = "runes",
@@ -213,7 +211,7 @@ SMODS.Consumable{
         G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
             
             --!!UPSIDE!!
-            if TGTMConsumables.config.CursedRunes then
+            if not TGTMConsumables.config.CursedRunes then
                 --!!DOWNSIDE!!
             else
                 G.GAME.TGTMCurseChance = G.GAME.TGTMCurseChance + (RuneCurse / 100)
@@ -227,7 +225,7 @@ SMODS.Consumable{
 
 ]]
 
-RuneCurse = 1
+RuneCurse = 2
 
 --blank
 SMODS.Consumable{
@@ -242,12 +240,8 @@ SMODS.Consumable{
 	unlocked = true,
 	discovered = true,
     config = { extra = {Curse = 5, Chance = 2} },
-    loc_txt = {
-        name = "Blank",
-        text = {"Spawn a {C:purple}rune{}", "{C:red}#2# in #3# chance to not get destroyed when used{}", "{C:attention}+#1#%{} chance for {C:purple}cursed{} cards"}
-    },
     loc_vars = function(self, info_queue, card)
-        return {vars = {card.ability.extra.Curse, G.GAME.probabilities.normal, card.ability.extra.Chance}, }
+        return {vars = {card.ability.extra.Curse, G.GAME.probabilities.normal, card.ability.extra.Chance, (card.ability.extra.Curse * 2)}, key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
     end,
 	atlas = "runes",
     set = "Runes",
@@ -258,7 +252,9 @@ SMODS.Consumable{
     cost = 4,
     order = 1,
     keep_on_use = function(self, card)
-        local akep = pseudorandom(pseudoseed("CurseStay")) < G.GAME.probabilities.normal/card.ability.extra.Chance
+
+        local akep = TGTMConsumables.config.CursedRunes or (pseudorandom(pseudoseed("CurseStay")) < G.GAME.probabilities.normal/card.ability.extra.Chance)
+
         if akep then
             card_eval_status_text(card,"extra",nil,nil,nil,{message = "Kept!", colour = G.C.PURPLE})
         end
@@ -272,6 +268,9 @@ SMODS.Consumable{
             
             
             G.GAME.TGTMCurseChance = G.GAME.TGTMCurseChance + (card.ability.extra.Curse / 100)
+            if TGTMConsumables.config.CursedRunes then
+                G.GAME.TGTMCurseChance = G.GAME.TGTMCurseChance + (card.ability.extra.Curse / 100)
+            end
 
             local card = create_card("Runes", G.consumeables, nil, nil, nil, nil, nil, "TGTM_runes")
             --print(card.ability.name)
@@ -288,7 +287,7 @@ SMODS.Consumable{
 --Laguz
 SMODS.Consumable{
     set_ability = function(self, card, initial, delay_sprites)
-        card:set_edition("e_negative")--,true)
+        card:set_edition("e_negative",true)
     end,
 	unlocked = true,
 	discovered = true,
@@ -296,9 +295,9 @@ SMODS.Consumable{
 
         local AmtDisc = card.ability.extra.discards
         if TGTMConsumables.config.CursedRunes then AmtDisc = AmtDisc * 2 end
-        print("r_rune_laguz" .. (TGTMConsumables.config.CursedRunes and "C" or ""))
+        print(card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or ""))
         --print(Runes.class_prefix)
-		return {vars = {AmtDisc}, key = "laguz"}-- .. (TGTMConsumables.config.CursedRunes and "C" or "")}
+		return {vars = {AmtDisc, RuneCurse}, key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
 	end,
 	atlas = "runes",
     set = "Runes",
@@ -314,8 +313,13 @@ SMODS.Consumable{
     use = function(self, card, area, copier)
         G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
             --Add 1 discard
-
-            ease_discard(card.ability.extra.discards)
+            local amt = card.ability.extra.discards
+            
+            if TGTMConsumables.config.CursedRunes then
+                amt = amt * 2
+                G.GAME.TGTMCurseChance = G.GAME.TGTMCurseChance + (RuneCurse / 100)
+            end
+            ease_discard(amt)
             
             --G.GAME.TGTMchangeHandSize = G.GAME.TGTMchangeHandSize - 1
 
@@ -326,18 +330,17 @@ SMODS.Consumable{
 --Dagaz
 SMODS.Consumable{
     set_ability = function(self, card, initial, delay_sprites)
-        card:set_edition("e_negative")--,true)
+        card:set_edition("e_negative",true)
     end,
 	unlocked = true,
 	discovered = true,
-    loc_txt = {
-        name = "Dagaz",
-        text = {"{C:red}Disable{} boss blind", "{C:attention}No reward money from blind{} "}
-    },
+    loc_vars = function(self, info_queue, card)
+        return {vars = {RuneCurse}, key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
+    end,
 	atlas = "runes",
     set = "Runes",
     name = "runes-daguz",
-    key = "daguz",
+    key = "dagaz",
     pos = {x = 2, y = 0},
     config = {},
     cost = 4,
@@ -350,9 +353,15 @@ SMODS.Consumable{
             card_eval_status_text(card,"extra",nil,nil,nil,{message = "Blind Disabled", colour = G.C.RED})
             --disable blind
             G.GAME.blind:disable()
-            --No reward money
-            G.GAME.blind.dollars = 0
-            G.GAME.current_round.dollars_to_be_earned = ''
+            if TGTMConsumables.config.CursedRunes then
+                G.GAME.TGTMCurseChance = G.GAME.TGTMCurseChance + (RuneCurse / 100)
+            else
+                --No reward money
+                G.GAME.blind.dollars = 0
+                G.GAME.current_round.dollars_to_be_earned = ''
+            end
+            
+            
         return true end }))
     end,
 }
@@ -360,17 +369,13 @@ SMODS.Consumable{
 --Othala
 SMODS.Consumable{
     set_ability = function(self, card, initial, delay_sprites)
-        card:set_edition("e_negative")--,true)
+        card:set_edition("e_negative",true)
     end,
 	unlocked = true,
 	discovered = true,
     loc_vars = function(self, info_queue, card)
-		return { vars = {G.GAME and G.GAME.interest_cap or '???', card.ability.extra.MultDollars, card.ability.extra.percentChange}}
+		return { vars = {G.GAME and G.GAME.interest_cap or '???', card.ability.extra.MultDollars, card.ability.extra.percentChange, RuneCurse}, key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
 	end,
-    loc_txt = {
-        name = "Othala",
-        text = {"Earn {C:attention}interest cap * #2#{} Dollars {C:inactive}($#1#){}", "{C:red}-#3#%{} of Interest cap"}
-    },
 	atlas = "runes",
     set = "Runes",
     name = "runes-othala",
@@ -388,14 +393,19 @@ SMODS.Consumable{
             ease_dollars(G.GAME.interest_cap)
             
             
-            print(G.GAME.interest_cap)
-            --reduce by 20% if more than 1 intrest cap
-            if G.GAME.interest_cap > 5 then
-                G.GAME.interest_cap = math.floor((G.GAME.interest_cap/5) * (1 - (card.ability.extra.percentChange / 100))) * 5
+            
+
+            if TGTMConsumables.config.CursedRunes then
+                G.GAME.TGTMCurseChance = G.GAME.TGTMCurseChance + (RuneCurse / 100)
+            else
+                print(G.GAME.interest_cap)
+                --reduce by 20% if more than 1 intrest cap
+                if G.GAME.interest_cap > 5 then
+                    G.GAME.interest_cap = math.floor((G.GAME.interest_cap/5) * (1 - (card.ability.extra.percentChange / 100))) * 5
+                end
+
+                print(G.GAME.interest_cap)
             end
-
-            print(G.GAME.interest_cap)
-
 
 
         return true end }))
@@ -405,17 +415,13 @@ SMODS.Consumable{
 --Inguz
 SMODS.Consumable{
     set_ability = function(self, card, initial, delay_sprites)
-        card:set_edition("e_negative")--,true)
+        card:set_edition("e_negative",true)
     end,
 	unlocked = true,
 	discovered = true,
     loc_vars = function(self, info_queue, card)
-		return {vars = {G.GAME and math.floor(G.GAME.interest_cap/5) or '???', card.ability.extra.DollarsInt, card.ability.extra.IntPer}}
+		return {vars = {G.GAME and math.floor(G.GAME.interest_cap/5) or '???', card.ability.extra.DollarsInt, card.ability.extra.IntPer, (RuneCurse * 2.5)},key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
 	end,
-    loc_txt = {
-        name = "Inguz",
-        text = {"{C:red}Set money to 0", "{C:attention}+#3#{} Interest per {C:attention}#2#${} lost {C:inactive}(+#1#){}"}
-    },
 	atlas = "runes",
     set = "Runes",
     name = "runes-inguz",
@@ -430,28 +436,28 @@ SMODS.Consumable{
     use = function(self, card, area, copier)
         G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
             G.GAME.interest_cap = G.GAME.interest_cap + math.floor(G.GAME.interest_cap/5)
-            ease_dollars(-G.GAME.dollars)
+            if TGTMConsumables.config.CursedRunes then
+                G.GAME.TGTMCurseChance = G.GAME.TGTMCurseChance + ((RuneCurse * 2) / 100)
+            else
+                ease_dollars(-G.GAME.dollars)
+            end
         return true end }))
     end,
 }
 --Mannaz
 SMODS.Consumable{
     set_ability = function(self, card, initial, delay_sprites)
-        card:set_edition("e_negative")--,true)
+        card:set_edition("e_negative",true)
     end,
 	unlocked = true,
 	discovered = true,
-    loc_txt = {
-        name = "Mannaz",
-        text = {"Scored face cards give {X:mult,C:white}#1#x{} mult", "{C:attention}#2#{} chips, {C:attention}#3#{} more per face card","Only for this round","when used, becomes a negative Joker"}
-    },
     loc_vars = function(self, info_queue, card)
-		return {vars = {card.ability.extra.FaceMult, card.ability.extra.BaseChip, card.ability.extra.FaceChip}}
+		return {vars = {card.ability.extra.FaceMult, card.ability.extra.BaseChip, card.ability.extra.FaceChip,RuneCurse},key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
 	end,
 	atlas = "runes",
     set = "Runes",
     name = "runes-Mannaz",
-    key = "Mannaz",
+    key = "mannaz",
     pos = {x = 1, y = 1},
     config = {extra = {FaceMult = 1.5, BaseChip = -20, FaceChip = -10}},
     cost = 4,
@@ -470,26 +476,24 @@ SMODS.Consumable{
 --Ehwaz
 SMODS.Consumable{
     set_ability = function(self, card, initial, delay_sprites)
-        card:set_edition("e_negative")--,true)
+        card:set_edition("e_negative",true)
     end,
 	unlocked = true,
 	discovered = true,
-    loc_txt = {
-        name = "Ehwaz",
-        text = {"{C:attention}#1# ante{}", "Break a random non-negative joker"}
-    },
     loc_vars = function(self, info_queue, card)
-        info_queue[#info_queue + 1] = {
-            key = 'e_TGTM_Broken', 
-            set = 'Edition',
-            config = {extra = 1}
-          }
-		return {vars = {card.ability.extra.AnteChange}}
+        if not TGTMConsumables.config.CursedRunes then
+            info_queue[#info_queue + 1] = {
+                key = 'e_TGTM_Broken', 
+                set = 'Edition',
+                config = {extra = 1}
+            }
+        end
+		return {vars = {card.ability.extra.AnteChange, RuneCurse * 2.5},key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
 	end,
 	atlas = "runes",
     set = "Runes",
     name = "runes-Ehwaz",
-    key = "Ehwaz",
+    key = "ehwaz",
     pos = {x = 0, y = 1},
     config = {extra = {AnteChange = -1}},
     cost = 4,
@@ -501,21 +505,27 @@ SMODS.Consumable{
         G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
             if G.GAME.round_resets.ante > 0 then 
                 local NonNegativeJokers = {}
-                ease_ante(card.ability.extra.AnteChange)
-                for k, v in pairs(G.jokers.cards) do
-                    if v.ability.set == 'Joker' and (v.config.center ~= G.P_CENTERS.e_negative) then
-                        table.insert(NonNegativeJokers, v)
-                        print(v.ability)
+                if TGTMConsumables.config.CursedRunes then
+                    G.GAME.TGTMCurseChance = G.GAME.TGTMCurseChance + ((RuneCurse * 2.5) / 100)
+                else
+                    for k, v in pairs(G.jokers.cards) do
+                        if v.ability.set == 'Joker' and ((v.edition and v.edition.negative)) then
+                            table.insert(NonNegativeJokers, v)
+                            print(v.ability)
+                        end
+                    end
+
+                    if NonNegativeJokers then
+                        local BreakJoker = pseudorandom_element(NonNegativeJokers, pseudoseed("BreakEhwaz"))
+                        if BreakJoker then
+                            BreakJoker:set_edition("e_TGTM_Broken")
+                            card_eval_status_text(BreakJoker,"extra",nil,nil,nil,{message = "Broken!", colour = G.C.CHIPS})
+                        end
                     end
                 end
 
-                if NonNegativeJokers then
-                    local BreakJoker = pseudorandom_element(NonNegativeJokers, pseudoseed("BreakEhwaz"))
-                    if BreakJoker then
-                        BreakJoker:set_edition("e_TGTM_Broken")
-                        card_eval_status_text(BreakJoker,"extra",nil,nil,nil,{message = "Broken!", colour = G.C.CHIPS})
-                    end
-                end
+                ease_ante(card.ability.extra.AnteChange)
+                
             end
             
 
@@ -538,22 +548,19 @@ SMODS.Consumable{
 --mannaz joker
 SMODS.Joker{
     set_ability = function(self, card, initial, delay_sprites)
-        card:set_edition("e_negative")--,true)
+        card:set_edition("e_negative",true)
         card.ability.eternal = true
     end,
     unlocked = true,
 	discovered = true,
-    loc_txt = {
-        name = "Mannaz",
-        text = {"Scored face cards give {X:mult,C:white}#1#x{} mult", "{C:attention}#2#{} chips, {C:attention}#3#{} more per face card","Destroyed after round"}
-    },
     loc_vars = function(self, info_queue, card)
-		return {vars = {card.ability.extra.FaceMult, card.ability.extra.BaseChip, card.ability.extra.FaceChip}}
+        print(card.config.center.key)
+		return {vars = {card.ability.extra.FaceMult, card.ability.extra.BaseChip, card.ability.extra.FaceChip},key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
 	end,
     config = {extra = {FaceMult = 1.5, BaseChip = -20, FaceChip = -10}},
     atlas = "runes",
     name = "runes-MannazJoker",
-    key = "MannazJoker",
+    key = "mannazJoker",
     pos = {x = 1, y = 1},
     rarity = 3,
     blueprint_compat = true,
@@ -566,10 +573,14 @@ SMODS.Joker{
                 if (context.other_card:get_id() == 11 or context.other_card:get_id() == 12 or context.other_card:get_id() == 13) then
 
                     card:juice_up()
+                    local Amt
+                    if not TGTMConsumables.config.CursedRunes then
+                        Amt = card.ability.extra.FaceChip
+                    end
 
                     return {
                         x_mult = card.ability.extra.FaceMult,
-                        chips = card.ability.extra.FaceChip,
+                        chips = Amt,
                         card = card
                     }
                 end
@@ -583,12 +594,18 @@ SMODS.Joker{
 
                 
             local chehe = card.ability.extra.BaseChip
+            if TGTMConsumables.config.CursedRunes then
+                chehe = 0
+            end
             if hand_chips <= -(card.ability.extra.BaseChip) then
                 chehe = -(hand_chips - 1)
             end
+
+
+
             return {
 
-                message = {""..card.ability.extra.BaseChip},
+                message = {""..chehe},
                 chip_mod = chehe,
                 colour = G.C.CHIPS
             }
