@@ -21,6 +21,7 @@ Runes and meanings:
 	Laguz (Water) : +1 discard for round
 	Dagaz (Dawn) : disable boss blind, no boss reward
 	OTHALA (Inheritance) : gain intrest cap * 5, lower intrest cap by 20%
+    Inguz (Seed) : set money to 0, gain intrest per 5 dollars lost
 
 
 	Blank : Spawn a rune, 50% chance to not get destroyed when used, +5% chance for cursed cards
@@ -91,7 +92,7 @@ function Game:start_run(args)
     --Buff Face Card for a round
     G.GAME.TGTMFaceBuff = G.GAME.TGTMFaceBuff or false
 
-    
+    G.GAME.TGTMBPbuff = G.GAME.TGTMBPbuff or false    
 end
 
 SMODS.Enhancement{
@@ -532,7 +533,33 @@ SMODS.Consumable{
         return true end }))
     end,
 }
+--Berkano
+SMODS.Consumable{
+    set_ability = function(self, card, initial, delay_sprites)
+        card:set_edition("e_negative",true)
+    end,
+	unlocked = true,
+	discovered = true,
+    loc_vars = function(self, info_queue, card)
+		return {vars = {},key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
+	end,
+	atlas = "runes",
+    set = "Runes",
+    name = "runes-Brekano",
+    key = "berkano",
+    pos = {x = 1, y = 1},
+    config = {extra = {FaceMult = 1.5, BaseChip = -20, FaceChip = -10}},
+    cost = 4,
+    order = 1,
+    can_use = function(self, card)
+        return (G.STATE == G.STATES.SELECTING_HAND) and (G.GAME.TGTMFaceBuff == false)
+    end,
+    use = function(self, card, area, copier)
+        G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
 
+        return true end }))
+    end,
+}
 
 
 
