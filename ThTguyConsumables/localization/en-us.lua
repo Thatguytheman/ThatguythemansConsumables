@@ -56,6 +56,14 @@ return {
             c_TGTM_ehwazC = {
                 name = "Ehwaz?",
                 text = {"{C:attention}#1# ante{}", "{C:attention}+#2#%{} chance for {C:purple}cursed{} cards"}
+            },
+            c_TGTM_berkano = {
+                name = "Berkano",
+                text = {"{C:attention}Duplicate{} one joker","{C:}Debuff another joker"}
+            },
+            c_TGTM_berkanoC = {
+                name = "Berkano?",
+                text = {"{C:attention}Duplicate{} one joker", "{C:attention}+#1#%{} chance for {C:purple}cursed{} cards"}
             }
 
         },
