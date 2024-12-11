@@ -170,7 +170,7 @@ SMODS.ConsumableType{
     --Rune colors
     primary_colour = HEX("480049"),
     secondary_colour = HEX("890062"),
-    collection_rows = { 5, 2 }, -- 3 pages for all runes, 10 per page
+    collection_rows = { 5, 5 }, -- 3 pages for all runes, 10 per page
     shop_rate = 2, -- same as spectrals in shop for ghost
     loc_txt = {
         name = "Runes",
@@ -430,7 +430,7 @@ SMODS.Consumable{
     pos = {x = 4, y = 0},
     config = {extra = {DollarsInt = 5, IntPer = 1}},
     cost = 4,
-    order = 1,
+    order = 22,
     can_use = function(self, card)
         return true
     end,
@@ -462,7 +462,7 @@ SMODS.Consumable{
     pos = {x = 1, y = 1},
     config = {extra = {FaceMult = 1.5, BaseChip = -20, FaceChip = -10}},
     cost = 4,
-    order = 1,
+    order = 21,
     can_use = function(self, card)
         return (G.STATE == G.STATES.SELECTING_HAND) and (G.GAME.TGTMFaceBuff == false)
     end,
@@ -498,7 +498,7 @@ SMODS.Consumable{
     pos = {x = 0, y = 1},
     config = {extra = {AnteChange = -1}},
     cost = 4,
-    order = 1,
+    order = 20,
     can_use = function(self, card)
         return true
     end,
@@ -534,6 +534,8 @@ SMODS.Consumable{
     end,
 }
 --Berkano
+JokerToRemove = {}
+JokerToUndebuff = {}
 SMODS.Consumable{
     set_ability = function(self, card, initial, delay_sprites)
         card:set_edition("e_negative",true)
@@ -541,22 +543,64 @@ SMODS.Consumable{
 	unlocked = true,
 	discovered = true,
     loc_vars = function(self, info_queue, card)
-		return {vars = {},key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
+		return {vars = {RuneCurse * 3},key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
 	end,
 	atlas = "runes",
     set = "Runes",
-    name = "runes-Brekano",
+    name = "runes-Berkano",
     key = "berkano",
-    pos = {x = 1, y = 1},
-    config = {extra = {FaceMult = 1.5, BaseChip = -20, FaceChip = -10}},
+    pos = {x = 2, y = 1},
+    config = {extra = {}},
     cost = 4,
-    order = 1,
+    order = 19,
     can_use = function(self, card)
-        return (G.STATE == G.STATES.SELECTING_HAND) and (G.GAME.TGTMFaceBuff == false)
+        return (G.STATE == G.STATES.SELECTING_HAND) and (G.jokers.cards) and (#G.jokers.cards > 0)
     end,
     use = function(self, card, area, copier)
         G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
+            local Jok1 = pseudorandom_element(G.jokers.cards, pseudoseed('BerkanoChooseDup'))
+            local Jok2
+            local anyUnDbf = false
+            for ke, va in ipairs(G.jokers.cards) do
+                if va.debuff == false then
+                    anyUnDbf = true
+                end
+            end
+            if anyUnDbf == true then
+                repeat
+                    Jok2 = pseudorandom_element(G.jokers.cards, pseudoseed('BerkanoChooseDbf'))
+                until Jok2.debuff == false
+            else
+                Jok2 = Jok1
+            end
 
+            if #G.jokers.cards ~= 1 then
+                repeat
+                    Jok2 = pseudorandom_element(G.jokers.cards, pseudoseed('BerkanoChoose'))
+                until (Jok1 ~= Jok2)
+            end
+            print(Jok1.ability.name)
+            print(Jok2.ability.name)
+
+
+            card_eval_status_text(Jok1,"extra",nil,nil,nil,{message = "Copied!", colour = G.C.CHIPS})
+            local dupeJoker = copy_card(Jok1)
+            dupeJoker:set_edition("e_negative",true)
+            dupeJoker.ability.eternal = true
+
+            table.insert(JokerToRemove, 1, dupeJoker)
+            dupeJoker.debuff = false
+            dupeJoker:add_to_deck()
+            G.jokers:emplace(dupeJoker)
+
+            tprint(JokerToRemove)
+            if TGTMConsumables.config.CursedRunes == false then
+                table.insert(JokerToUndebuff, 1, Jok2)
+                card_eval_status_text(Jok2,"extra",nil,nil,nil,{message = "Debuffed!", colour = G.C.MULT})
+                Jok2.debuff = true
+            else
+                G.GAME.TGTMCurseChance = G.GAME.TGTMCurseChance + ((RuneCurse * 3) / 100)
+            end
         return true end }))
     end,
 }
@@ -592,13 +636,9 @@ SMODS.Joker{
     rarity = 3,
     blueprint_compat = true,
     calculate = function(self, card, context)
-        
-
-
         if context.individual then
             if context.cardarea == G.play then
                 if (context.other_card:get_id() == 11 or context.other_card:get_id() == 12 or context.other_card:get_id() == 13) then
-
                     card:juice_up()
                     local Amt
                     if not TGTMConsumables.config.CursedRunes then
@@ -613,13 +653,7 @@ SMODS.Joker{
                 end
             end
         end
-        if context.joker_main then
-            print(hand_chips)
-            
-
-            
-
-                
+        if context.joker_main then                
             local chehe = card.ability.extra.BaseChip
             if TGTMConsumables.config.CursedRunes then
                 chehe = 0
@@ -627,9 +661,6 @@ SMODS.Joker{
             if hand_chips <= -(card.ability.extra.BaseChip) then
                 chehe = -(hand_chips - 1)
             end
-
-
-
             return {
 
                 message = {""..chehe},
@@ -653,25 +684,39 @@ function end_round()
   endroundref()
   G.hand:change_size(G.GAME.TGTMchangeHandSize)
   G.GAME.TGTMchangeHandSize = 0
-  if G.GAME.TGTMFaceBuff then
-    for k, v in pairs(G.jokers.cards) do
-        if v.ability.name == "runes-MannazJoker" then
+  for k, v in pairs(G.jokers.cards) do
+    if v.ability.name == "runes-MannazJoker" then
+        v.ability.eternal = false
+        v:juice_up(0.8, 0.8)
+        v:start_dissolve({HEX("57ecab")}, nil, 1.6)
+    end
+
+    for i, vv in ipairs(JokerToRemove) do
+        print(i, vv.ability.name, v.ability.name)
+		if vv == v then 
             v.ability.eternal = false
             v:juice_up(0.8, 0.8)
             v:start_dissolve({HEX("57ecab")}, nil, 1.6)
+            
         end
-    end
+	end
+    for i, vv in ipairs(JokerToUndebuff) do
+		if vv == v then 
+            v.debuff = false
+            
+        end
+	end
   end
   G.GAME.TGTMFaceBuff = false
-
+  JokerToRemove = {}
 end
 --
 local ATDref = Card.add_to_deck
 function Card:add_to_deck(args)
     ATDref(self, args)
-    print(self.ability.set)
-    print(pseudorandom(pseudoseed("Curse")))
-    print(G.GAME.TGTMCurseChance)
+    --print(self.ability.set)
+    --print(pseudorandom(pseudoseed("Curse")))
+    --print(G.GAME.TGTMCurseChance)
     if (G.GAME.TGTMCurseChance > 0) and (self.ability.set == 'Joker') and (pseudorandom(pseudoseed("Curse")) < G.GAME.TGTMCurseChance) then
         G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
             
