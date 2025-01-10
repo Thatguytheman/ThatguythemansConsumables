@@ -8,11 +8,7 @@
 --[[to do:
 Add runes (negative tarots temporary gain, long term downsides)
 
-Add cursed tarots (only gotten from blank rune)
 Add Jokers (balance top 10% chips + mult, transfer 5% of mult to chips, chip multiplier, set mult to 100, reduce mult by 10% and award 1$ per 10 mult)
-
-thank you to cryptid mod because i copied a bunch of stuff from it to learn
-
 ]]
 
 
@@ -26,9 +22,15 @@ Runes and meanings:
 
 	Blank : Spawn a rune, 50% chance to not get destroyed when used, +5% chance for cursed cards
 ]]
+
+--talisman moment
+to_big = to_big or function(num)
+    return num
+end
+
 local IntrestAmt = 0
 
---lets dissect this
+
 TGTMConsumables = {}
 
 TGTMConsumables.config = SMODS.current_mod.config
@@ -93,7 +95,22 @@ function Game:start_run(args)
     G.GAME.TGTMFaceBuff = G.GAME.TGTMFaceBuff or false
 
     G.GAME.TGTMBPbuff = G.GAME.TGTMBPbuff or false    
+
 end
+
+SMODS.Shader({
+    key = "cursed",
+    path = "cursed.fs"
+})
+SMODS.Shader({
+    key = "pure",
+    path = "pure.fs"
+})
+SMODS.Shader({
+    key = "broken",
+    path = "broken.fs"
+})
+
 
 SMODS.Enhancement{
     --Blank
@@ -115,13 +132,73 @@ SMODS.Enhancement{
         text = {"Scores {C:attention}0{} chips", "No rank or suit"}
     }
     
+    
+}
+
+SMODS.Enhancement{
+    --glass
+    key = "SturdyGlass",
+    atlas = "Tatatro",
+    pos = {x = 5, y = 2},
+    unlocked = true,
+    discovered = true,
+    loc_vars = function(self, info_queue, card)
+        return {vars = {G.GAME.probabilities.normal, (card and card.ability.extra.DbfChance) or 5}, key = (card and card.config.center.key) or "m_TGTM_SturdyGlass"}
+    end,
+    config = {
+        extra = {DbfChance = 5},
+        x_mult = 2
+    },
+    calculate = function(self, card, context, effect)
+        if context.cardarea == G.play and context.main_scoring then
+            if pseudorandom(pseudoseed("SturdyGlassDebf")) < G.GAME.probabilities.normal/card.ability.extra.DbfChance then
+                local x_multtt = 1
+            else
+                local x_multtt = 2
+            end
+
+            return {
+                xmult = x_multtt
+            }
+        end
+    end
+
+}
+
+SMODS.Enhancement{
+    --glass
+    key = "SturdierGlass",
+    atlas = "Tatatro",
+    pos = {x = 5, y = 2},
+    unlocked = true,
+    discovered = true,
+    loc_vars = function(self, info_queue, card)
+        return {vars = {G.GAME.probabilities.normal, (card and card.ability.extra.DbfChance) or 5}, key = (card and card.config.center.key) or "m_TGTM_SturdierGlass"}
+    end,
+    config = {
+        extra = {DbfChance = 5},
+        x_mult = 2
+    },
+    calculate = function(self, card, context, effect)
+        if context.cardarea == G.play and not context.repetition then
+            if pseudorandom(pseudoseed("SturdierGlassDebf")) < G.GAME.probabilities.normal/card.ability.extra.DbfChance then
+                local x_multt = 1.5
+            else
+                local x_multt = 2
+            end
+            return {
+                xmult = x_multt
+            }
+        end
+    end
+
 }
 
 
 SMODS.Edition{
     --0.75X mult
     key = "Cursed",
-    shader = false,
+    shader = "cursed",
     loc_txt = {
         name = "Cursed!",
         label = "Cursed!",
@@ -129,25 +206,53 @@ SMODS.Edition{
     },
     unlocked = true,
     discovered = true,
-    config = {
-        x_mult = 0.75
-    }
+    calculate = function(self, card, context, effect)
+        if context.cardarea == G.play and not context.repetition then
+            return {xmult = 0.75}
+        end
+    end
 }
 
 SMODS.Edition{
     --0.5X mult
     key = "Broken",
-    shader = false,
+    shader = "broken",
     loc_txt = {
         name = "Broken",
         label = "Broken",
-        text = {"{X:mult,C:black} X0.5{} mult"}
+        text = {"{X:mult,C:white} X0.5{} mult"}
+    },
+    unlocked = true,
+    discovered = true,
+    calculate = function(self, card, context, effect)
+        if context.cardarea == G.play and not context.repetition then
+            return {xmult = 0.5}
+        end
+    end,
+    
+    disable_base_shader = true
+}
+
+SMODS.Edition{
+    --Purified
+    key = "Purified",
+    shader = "pure",
+    loc_txt = {
+        name = "Purified",
+        label = "Purified",
+        text = {"This joker is unable to be retriggered", "This joker's abilities cannot be copied"}
     },
     unlocked = true,
     discovered = true,
     config = {
-        x_mult = 0.5
-    }
+        
+    },
+    on_apply = function(card)
+        card.blueprint_compat = false
+    end,
+    on_remove = function(card)
+        card.blueprint_compat = true
+    end
 }
 
 SMODS.Atlas{
@@ -215,7 +320,7 @@ SMODS.Consumable{
             if not TGTMConsumables.config.CursedRunes then
                 --!!DOWNSIDE!!
             else
-                G.GAME.TGTMCurseChance = G.GAME.TGTMCurseChance + (RuneCurse / 100)
+                G.GAME.TGTMCurseChance = G.GAME.TGTMCurseChance + (G.RuneCurse / 100)
             end
 
         return true end }))
@@ -226,7 +331,7 @@ SMODS.Consumable{
 
 ]]
 
-RuneCurse = 2
+G.RuneCurse = 2
 
 --blank
 SMODS.Consumable{
@@ -298,7 +403,7 @@ SMODS.Consumable{
         if TGTMConsumables.config.CursedRunes then AmtDisc = AmtDisc * 2 end
         print(card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or ""))
         --print(Runes.class_prefix)
-		return {vars = {AmtDisc, RuneCurse}, key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
+		return {vars = {AmtDisc, G.RuneCurse}, key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
 	end,
 	atlas = "runes",
     set = "Runes",
@@ -318,7 +423,7 @@ SMODS.Consumable{
             
             if TGTMConsumables.config.CursedRunes then
                 amt = amt * 2
-                G.GAME.TGTMCurseChance = G.GAME.TGTMCurseChance + (RuneCurse / 100)
+                G.GAME.TGTMCurseChance = G.GAME.TGTMCurseChance + (G.RuneCurse / 100)
             end
             ease_discard(amt)
             
@@ -336,7 +441,7 @@ SMODS.Consumable{
 	unlocked = true,
 	discovered = true,
     loc_vars = function(self, info_queue, card)
-        return {vars = {RuneCurse}, key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
+        return {vars = {G.RuneCurse}, key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
     end,
 	atlas = "runes",
     set = "Runes",
@@ -355,7 +460,7 @@ SMODS.Consumable{
             --disable blind
             G.GAME.blind:disable()
             if TGTMConsumables.config.CursedRunes then
-                G.GAME.TGTMCurseChance = G.GAME.TGTMCurseChance + (RuneCurse / 100)
+                G.GAME.TGTMCurseChance = G.GAME.TGTMCurseChance + (G.RuneCurse / 100)
             else
                 --No reward money
                 G.GAME.blind.dollars = 0
@@ -375,7 +480,7 @@ SMODS.Consumable{
 	unlocked = true,
 	discovered = true,
     loc_vars = function(self, info_queue, card)
-		return { vars = {G.GAME and G.GAME.interest_cap or '???', card.ability.extra.MultDollars, card.ability.extra.percentChange, RuneCurse}, key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
+		return { vars = {G.GAME and G.GAME.interest_cap or '???', card.ability.extra.MultDollars, card.ability.extra.percentChange, G.RuneCurse}, key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
 	end,
 	atlas = "runes",
     set = "Runes",
@@ -397,7 +502,7 @@ SMODS.Consumable{
             
 
             if TGTMConsumables.config.CursedRunes then
-                G.GAME.TGTMCurseChance = G.GAME.TGTMCurseChance + (RuneCurse / 100)
+                G.GAME.TGTMCurseChance = G.GAME.TGTMCurseChance + (G.RuneCurse / 100)
             else
                 print(G.GAME.interest_cap)
                 --reduce by 20% if more than 1 intrest cap
@@ -421,7 +526,7 @@ SMODS.Consumable{
 	unlocked = true,
 	discovered = true,
     loc_vars = function(self, info_queue, card)
-		return {vars = {G.GAME and math.floor(G.GAME.interest_cap/5) or '???', card.ability.extra.DollarsInt, card.ability.extra.IntPer, (RuneCurse * 2.5)},key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
+		return {vars = {G.GAME and math.floor(G.GAME.interest_cap/5) or '???', card.ability.extra.DollarsInt, card.ability.extra.IntPer, (G.RuneCurse * 2.5)},key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
 	end,
 	atlas = "runes",
     set = "Runes",
@@ -438,7 +543,7 @@ SMODS.Consumable{
         G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
             G.GAME.interest_cap = G.GAME.interest_cap + math.floor(G.GAME.interest_cap/5)
             if TGTMConsumables.config.CursedRunes then
-                G.GAME.TGTMCurseChance = G.GAME.TGTMCurseChance + ((RuneCurse * 2) / 100)
+                G.GAME.TGTMCurseChance = G.GAME.TGTMCurseChance + ((G.RuneCurse * 2) / 100)
             else
                 ease_dollars(-G.GAME.dollars)
             end
@@ -453,7 +558,7 @@ SMODS.Consumable{
 	unlocked = true,
 	discovered = true,
     loc_vars = function(self, info_queue, card)
-		return {vars = {card.ability.extra.FaceMult, card.ability.extra.BaseChip, card.ability.extra.FaceChip,RuneCurse},key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
+		return {vars = {card.ability.extra.FaceMult, card.ability.extra.BaseChip, card.ability.extra.FaceChip,G.RuneCurse},key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
 	end,
 	atlas = "runes",
     set = "Runes",
@@ -463,15 +568,60 @@ SMODS.Consumable{
     config = {extra = {FaceMult = 1.5, BaseChip = -20, FaceChip = -10}},
     cost = 4,
     order = 21,
+    keep_on_use = function(self, card) 
+        return true 
+    end,
     can_use = function(self, card)
         return (G.STATE == G.STATES.SELECTING_HAND) and (G.GAME.TGTMFaceBuff == false)
     end,
     use = function(self, card, area, copier)
         G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
             G.GAME.TGTMFaceBuff = true
-            add_joker("j_TGTM_MannazJoker")
+            --add_joker("j_TGTM_MannazJoker")
+            juice_card_until(card, function()
+                return G.GAME.TGTMFaceBuff
+            end)
         return true end }))
     end,
+    calculate = function(self, card, context, effect)
+        if G.GAME.TGTMFaceBuff then
+            if context.individual and context.cardarea == G.play then
+                if (context.other_card:get_id() == 11 or context.other_card:get_id() == 12 or context.other_card:get_id() == 13) then
+                    card:juice_up()
+                    local Amt
+                    if not TGTMConsumables.config.CursedRunes then
+                        Amt = card.ability.extra.FaceChip
+                    end
+                    return {
+                        x_mult = card.ability.extra.FaceMult,
+                        chips = Amt,
+                        card = card,
+                        chip_message = {"".. Amt}
+                    }
+                end
+            end
+            if context.joker_main then                
+                local chehe = card.ability.extra.BaseChip
+                if TGTMConsumables.config.CursedRunes then
+                    chehe = 0
+                end
+                if hand_chips <= to_big(-(card.ability.extra.BaseChip)) then
+                    chehe = -(hand_chips - 1)
+                end
+                return {
+    
+                    message = {""..tostring(chehe)},
+                    chip_mod = chehe,
+                    colour = G.C.CHIPS
+                    
+                }
+            end
+            if context.end_of_round then
+                G.GAME.TGTMFaceBuff = false
+                card:start_dissolve({HEX("57ecab")}, nil, 1.6)
+            end
+        end
+    end
 }
 
 --Ehwaz
@@ -489,7 +639,7 @@ SMODS.Consumable{
                 config = {extra = 1}
             }
         end
-		return {vars = {card.ability.extra.AnteChange, RuneCurse * 2.5},key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
+		return {vars = {card.ability.extra.AnteChange, G.RuneCurse * 2.5},key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
 	end,
 	atlas = "runes",
     set = "Runes",
@@ -507,12 +657,15 @@ SMODS.Consumable{
             if G.GAME.round_resets.ante > 0 then 
                 local NonNegativeJokers = {}
                 if TGTMConsumables.config.CursedRunes then
-                    G.GAME.TGTMCurseChance = G.GAME.TGTMCurseChance + ((RuneCurse * 2.5) / 100)
+                    G.GAME.TGTMCurseChance = G.GAME.TGTMCurseChance + ((G.RuneCurse * 2.5) / 100)
                 else
-                    for k, v in pairs(G.jokers.cards) do
-                        if v.ability.set == 'Joker' and ((v.edition and v.edition.negative)) then
-                            table.insert(NonNegativeJokers, v)
-                            print(v.ability)
+                    for i = 1, #G.jokers.cards do
+                        local very = G.jokers.cards[i]
+                        print(i)
+                        print(very)
+                        if ((very.edition and very.edition.negative ~= true) or not (very.edition)) then
+                            table.insert(NonNegativeJokers, very)
+                            print(very.ability)
                         end
                     end
 
@@ -534,8 +687,8 @@ SMODS.Consumable{
     end,
 }
 --Berkano
-JokerToRemove = {}
-JokerToUndebuff = {}
+G.JokerToRemove = {}
+G.JokerToUndebuff = {}
 SMODS.Consumable{
     set_ability = function(self, card, initial, delay_sprites)
         card:set_edition("e_negative",true)
@@ -543,7 +696,7 @@ SMODS.Consumable{
 	unlocked = true,
 	discovered = true,
     loc_vars = function(self, info_queue, card)
-		return {vars = {RuneCurse * 3},key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
+		return {vars = {G.RuneCurse * 3},key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
 	end,
 	atlas = "runes",
     set = "Runes",
@@ -588,18 +741,569 @@ SMODS.Consumable{
             dupeJoker:set_edition("e_negative",true)
             dupeJoker.ability.eternal = true
 
-            table.insert(JokerToRemove, 1, dupeJoker)
+            table.insert(G.JokerToRemove, 1, dupeJoker)
             dupeJoker.debuff = false
             dupeJoker:add_to_deck()
             G.jokers:emplace(dupeJoker)
 
-            tprint(JokerToRemove)
+            tprint(G.JokerToRemove)
             if TGTMConsumables.config.CursedRunes == false then
-                table.insert(JokerToUndebuff, 1, Jok2)
+                table.insert(G.JokerToUndebuff, 1, Jok2)
                 card_eval_status_text(Jok2,"extra",nil,nil,nil,{message = "Debuffed!", colour = G.C.MULT})
                 Jok2.debuff = true
             else
-                G.GAME.TGTMCurseChance = G.GAME.TGTMCurseChance + ((RuneCurse * 3) / 100)
+                G.GAME.TGTMCurseChance = G.GAME.TGTMCurseChance + ((G.RuneCurse * 3) / 100)
+            end
+        return true end }))
+    end,
+}
+
+--Tiwaz
+SMODS.Consumable{
+    set_ability = function(self, card, initial, delay_sprites)
+        card:set_edition("e_negative", true)
+    end,
+	unlocked = true,
+	discovered = true,
+    loc_vars = function(self, info_queue, card)
+		return {vars = {card.ability.extra.Payout,card.ability.extra.BlindInc, G.RuneCurse}, key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
+	end,
+    config = {extra = {BlindInc = 50, Payout = 25}},
+	atlas = "runes",
+    set = "Runes",
+    name = "runes-Tiwaz",
+    key = "tiwaz",
+    pos = {x = 3, y = 1},
+    cost = 4,
+    order = 18,
+    can_use = function(self, card)
+        return G.STATE == G.STATES.SELECTING_HAND
+    end,
+    use = function(self, card, area, copier)
+        G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
+            
+            G.GAME.blind.dollars = G.GAME.blind.dollars + 25
+            G.GAME.current_round.dollars_to_be_earned = '$' .. G.GAME.blind.dollars 
+
+            if not TGTMConsumables.config.CursedRunes then
+                G.GAME.blind.chips = G.GAME.blind.chips * (1 + (card.ability.extra.BlindInc / 100))
+                G.GAME.blind.chip_text = number_format(G.GAME.blind.chips)
+            else
+                G.GAME.TGTMCurseChance = G.GAME.TGTMCurseChance + (G.RuneCurse / 100)
+            end
+
+        return true end }))
+    end,
+}
+
+--Sowilo
+SMODS.Consumable{
+    set_ability = function(self, card, initial, delay_sprites)
+        card:set_edition("e_negative", true)
+    end,
+	unlocked = true,
+	discovered = true,
+    loc_vars = function(self, info_queue, card)
+        if not TGTMConsumables.config.CursedRunes then
+            info_queue[#info_queue + 1] = {
+                key = 'e_TGTM_Purified', 
+                set = 'Edition',
+                config = {extra = 1}
+            }
+        end
+		return {vars = {G.RuneCurse}, key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
+	end,
+    config = {extra = {}},
+	atlas = "runes",
+    set = "Runes",
+    name = "runes-SOWILO",
+    key = "sowilo",
+    pos = {x = 4, y = 1},
+    cost = 4,
+    order = 17,
+    can_use = function(self, card)
+        return #G.jokers.highlighted == 1
+    end,
+    use = function(self, card, area, copier)
+        G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
+            local CARD = G.jokers.highlighted[1]
+            CARD.ability.perishable = nil
+			CARD:set_rental(nil)
+            
+            if SMODS.Mods.Cryptid.can_load then
+                CARD.pinned = nil
+                if not CARD.sob then
+                    CARD:set_eternal(nil)
+                end
+                CARD.ability.banana = nil
+            else
+                CARD:set_eternal(nil)
+            end
+
+            if not TGTMConsumables.config.CursedRunes then
+                CARD:set_edition("e_TGTM_Purified")
+            else
+                G.GAME.TGTMCurseChance = G.GAME.TGTMCurseChance + (G.RuneCurse / 100)
+            end
+
+        return true end }))
+    end,
+}
+
+--whatever this one is
+SMODS.Consumable{
+    set_ability = function(self, card, initial, delay_sprites)
+        card:set_edition("e_negative", true)
+    end,
+	unlocked = true,
+	discovered = true,
+    loc_vars = function(self, info_queue, card)
+        local keyeeee = ""
+        if not TGTMConsumables.config.CursedRunes then
+            keyeeee = G.P_CENTERS.m_TGTM_SturdyGlass
+        else
+            keyeeee = G.P_CENTERS.m_TGTM_SturdierGlass
+        end
+        print(keyeeee)
+        info_queue[#info_queue + 1] = keyeeee
+        
+
+		return {vars = {card.ability.extra.CardAmt, G.RuneCurse * 2}, key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
+	end,
+    config = {extra = {CardAmt = 2}},
+	atlas = "runes",
+    set = "Runes",
+    name = "runes-ALGIZ",
+    key = "algiz",
+    pos = {x = 0, y = 2},
+    cost = 4,
+    order = 16,
+    can_use = function(self, card)
+        local flag = false
+        for i, card in pairs(G.hand.highlighted) do
+            print(card.ability.name)
+            if not (card.ability.name == 'Glass Card') then
+                flag = true
+            end
+        end
+        return (#G.hand.highlighted <= card.ability.extra.CardAmt) and (flag == false)
+    end,
+    use = function(self, card, area, copier)
+        G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
+            local keyeeee = ""
+            if not TGTMConsumables.config.CursedRunes then
+            keyeeeee = G.P_CENTERS.m_TGTM_SturdyGlass
+            else
+            keyeeeee = G.P_CENTERS.m_TGTM_SturdierGlass
+            G.GAME.TGTMCurseChance = G.GAME.TGTMCurseChance + ((G.RuneCurse * 2)/100)
+            end
+            for i, card in pairs(G.hand.highlighted) do
+                card:set_ability(keyeeeee)
+            end
+        return true end }))
+    end,
+}
+
+--pertro!!!!!!!!!!!!!!! PRETORO
+SMODS.Consumable{
+    set_ability = function(self, card, initial, delay_sprites)
+        card:set_edition("e_negative", true)
+    end,
+	unlocked = true,
+	discovered = true,
+    loc_vars = function(self, info_queue, card)
+		return {vars = {card.ability.extra.BlindIncrease * 100,G.RuneCurse * 3}, key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
+	end,
+    config = {extra = {BlindIncrease = 0.0}},
+	atlas = "runes",
+    set = "Runes",
+    name = "runes-PERTHRO",
+    key = "perthro",
+    pos = {x = 1, y = 2},
+    cost = 4,
+    order = 15,
+    can_use = function(self, card)
+        return #G.jokers.highlighted == 1
+    end,
+    use = function(self, card, area, copier)
+        G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
+            local CARD = G.jokers.highlighted[1]
+            
+            local rarity = G.jokers.highlighted[1].config.center.rarity
+		    local legendary = nil
+
+            
+
+            if rarity == 1 then
+                rarity = 0.9
+                card.ability.extra.BlindIncrease = 1.1
+            elseif rarity == 2 then
+                rarity = 0.99
+                card.ability.extra.BlindIncrease = 1.5
+            elseif rarity == 3 then
+                rarity = nil
+                legendary = true
+                card.ability.extra.BlindIncrease = 2.0
+            elseif rarity == 4 and SMODS.Mods.Cryptid.can_load then
+                rarity = 1
+                card.ability.extra.BlindIncrease = 4.0
+            elseif rarity == "cry_epic" then
+                rarity = "cry_exotic"
+                card.ability.extra.BlindIncrease = 8.0
+            elseif rarity == 4 and not SMODS.Mods.Cryptid.can_load then
+                rarity = nil
+                legendary = true
+                card.ability.extra.BlindIncrease = 1.0
+            elseif rarity == "cry_exotic" then
+                rarity = 0
+                card.ability.extra.BlindIncrease = 0.1
+            end
+                
+
+            G.jokers.highlighted[1]:start_dissolve()
+            local cardC = create_card("Joker", G.jokers, legendary, rarity, nil, nil, nil, "TGTM_Pert")
+			cardC:add_to_deck()
+			G.jokers:emplace(cardC)
+			cardC:juice_up(0.3, 0.5)
+
+            if not TGTMConsumables.config.CursedRunes then
+                G.GAME.starting_params.ante_scaling = G.GAME.starting_params.ante_scaling + card.ability.extra.BlindIncrease
+
+            else
+                G.GAME.TGTMCurseChance = G.GAME.TGTMCurseChance + (G.RuneCurse * card.ability.extra.BlindIncrease * 1.25 / 100)
+            end
+
+        return true end }))
+    end,
+}
+
+
+UnPlasmaRnd = false
+SMODS.Consumable{
+    set_ability = function(self, card, initial, delay_sprites)
+        card:set_edition("e_negative", true)
+    end,
+	unlocked = true,
+	discovered = true,
+    loc_vars = function(self, info_queue, card)
+		return {vars = {card.ability.extra.BlindIncRnd, G.RuneCurse * 3}, key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
+	end,
+    config = {extra = {BlindIncRnd = 3.0}},
+	atlas = "runes",
+    set = "Runes",
+    name = "runes-EIHWAZ",
+    key = "eihwaz",
+    pos = {x = 2, y = 2},
+    cost = 4,
+    order = 1,
+    can_use = function(self, card)
+        return G.STATE == G.STATES.SELECTING_HAND and UnPlasmaRnd == false
+    end,
+    use = function(self, card, area, copier)
+        G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
+            
+            --!!UPSIDE!!
+            UnPlasmaRnd = true
+
+            if not TGTMConsumables.config.CursedRunes then
+                G.GAME.blind.chips = G.GAME.blind.chips * card.ability.extra.BlindIncRnd
+                G.GAME.blind.chip_text = number_format(G.GAME.blind.chips)
+
+            else
+                G.GAME.TGTMCurseChance = G.GAME.TGTMCurseChance + (G.RuneCurse * 3 / 100)
+            end
+
+        return true end }))
+    end,
+}
+
+SMODS.Consumable{
+    set_ability = function(self, card, initial, delay_sprites)
+        card:set_edition("e_negative", true)
+    end,
+	unlocked = true,
+	discovered = true,
+    loc_vars = function(self, info_queue, card)
+		return {vars = {card.ability.extra.MaxGain + ((TGTMConsumables.config.CursedRunes and MaxGain) or 0)}, key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
+	end,
+    config = {extra = {MaxGain = 40}},
+	atlas = "runes",
+    set = "Runes",
+    name = "runes-JERA",
+    key = "jera",
+    pos = {x = 3, y = 2},
+    cost = 4,
+    order = 1,
+    can_use = function(self, card)
+        return true
+    end,
+    use = function(self, card, area, copier)
+        G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
+            monomon = card.ability.extra.MaxGain
+            if TGTMConsumables.config.CursedRunes then
+                monomon = monomon * 2
+                G.GAME.TGTMCurseChance = G.GAME.TGTMCurseChance + (G.RuneCurse / 100)
+            end
+            
+            ease_dollars(math.max(0,math.min(G.GAME.dollars, monomon)), true)
+
+            
+
+        return true end }))
+    end,
+}
+
+SMODS.Consumable{
+    set_ability = function(self, card, initial, delay_sprites)
+        card:set_edition("e_negative",true)
+    end,
+	unlocked = true,
+	discovered = true,
+    loc_vars = function(self, info_queue, card)
+		return {vars = {card.ability.extra.hands, card.ability.extra.handsizes, G.RuneCurse}, key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
+	end,
+	atlas = "runes",
+    set = "Runes",
+    name = "runes-ISA",
+    key = "isa",
+    pos = {x = 4, y = 2},
+    config = {extra = {hands = 1, handsizes = -1}},
+    cost = 4,
+    order = 21,
+    can_use = function(self, card)
+        return G.STATE == G.STATES.SELECTING_HAND
+    end,
+    use = function(self, card, area, copier)
+        G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
+
+            local amt = card.ability.extra.hands
+            
+            if TGTMConsumables.config.CursedRunes then
+
+                G.GAME.TGTMCurseChance = G.GAME.TGTMCurseChance + (G.RuneCurse / 100)
+            else
+                G.hand:change_size(card.ability.extra.handsizes)
+                G.GAME.TGTMchangeHandSize = G.GAME.TGTMchangeHandSize - card.ability.extra.handsizes
+            end
+            ease_hands_played(amt)
+            
+            
+            
+        return true end }))
+    end,
+}
+
+
+
+
+SMODS.Consumable{
+    set_ability = function(self, card, initial, delay_sprites)
+        card:set_edition("e_negative",true)
+    end,
+	unlocked = true,
+	discovered = true,
+    loc_vars = function(self, info_queue, card)
+		return {vars = {G.RuneCurse}, key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
+	end,
+	atlas = "runes",
+    set = "Runes",
+    name = "runes-NAUTHIZ",
+    key = "nauthiz",
+    pos = {x = 0, y = 3},
+    config = {extra = {DegradeHand = nil,UpgradedHanded = false, UpgradeNextHandPlayed = false}},
+    cost = 4,
+    order = 21,
+    keep_on_use = function(self, card) 
+        return true 
+    end,
+    can_use = function(self, card)
+        return G.STATE == G.STATES.SELECTING_HAND and not card.ability.extra.UpgradeNextHandPlayed
+    end,
+    use = function(self, card, area, copier)
+        G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
+
+            
+            card.ability.extra.UpgradeNextHandPlayed = true
+
+            
+            
+            juice_card_until(card, function()
+                return card.ability.extra.UpgradeNextHandPlayed
+            end)
+            
+        return true end }))
+    end,
+    calculate = function(self, card, context)
+
+        if card.ability.extra.UpgradeNextHandPlayed then
+            if context.before then
+                card.ability.extra.UpgradeNextHandPlayed = false
+                card.ability.extra.UpgradedHanded = true 
+                card.ability.extra.DegradeHand = context.scoring_name
+                print(card.ability.extra.DegradeHand)
+                return {
+                    card = card,
+                    level_up = true,
+                    message = "Need!"
+
+                }
+            end
+        end
+        if card.ability.extra.UpgradedHanded then
+            if context.end_of_round then
+                if TGTMConsumables.config.CursedRunes then
+
+                    G.GAME.TGTMCurseChance = G.GAME.TGTMCurseChance + (G.RuneCurse / 100)
+                
+                else
+                level_up_hand(card, card.ability.extra.DegradeHand, nil, -1)
+                end
+                card.ability.extra.DegradeHand = nil
+                card:start_dissolve({HEX("57ecab")}, nil, 1.6)
+                card.ability.extra.UpgradedHanded = nil
+            end
+        end
+    end
+
+}
+
+SMODS.Consumable{
+    set_ability = function(self, card, initial, delay_sprites)
+        card:set_edition("e_negative",true)
+    end,
+	unlocked = true,
+	discovered = true,
+    loc_vars = function(self, info_queue, card)
+		return {vars = {G.RuneCurse}, key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
+	end,
+	atlas = "runes",
+    set = "Runes",
+    name = "runes-HAGALAZ",
+    key = "hagalaz",
+    pos = {x = 1, y = 3},
+    config = {extra = {PcentDecBlndyes = 2}},
+    cost = 4,
+    order = 21,
+    can_use = function(self, card)
+        return (G.STATE == G.STATES.SELECTING_HAND) and ((#G.hand.cards > 0) or (TGTMConsumables.config.CursedRunes))
+    end,
+    use = function(self, card, area, copier)
+        G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
+
+            
+            local cardsDestroyed = 0
+
+            if TGTMConsumables.config.CursedRunes then
+                G.GAME.TGTMCurseChance = G.GAME.TGTMCurseChance + (G.RuneCurse / 100)
+                cardsDestroyed = 3
+            else
+
+                local keepIndex = pseudorandom_element(G.hand.cards, pseudoseed('HagalazChooseSafe'))
+                for k, v in pairs(G.hand.cards) do
+                    if v ~= keepIndex then
+                        v:start_dissolve({HEX("57ecab")}, nil, 1.6)
+                        cardsDestroyed = cardsDestroyed + 1
+                    end
+                end
+
+            end         
+            
+            G.GAME.blind.chips = G.GAME.blind.chips * (1 - ((card.ability.extra.PcentDecBlndyes * cardsDestroyed) / 100))
+            G.GAME.blind.chip_text = number_format(G.GAME.blind.chips)
+
+                        
+        return true end }))
+    end,
+}
+
+SMODS.Consumable{
+    set_ability = function(self, card, initial, delay_sprites)
+        card:set_edition("e_negative",true)
+    end,
+	unlocked = true,
+	discovered = true,
+    loc_vars = function(self, info_queue, card)
+		return {vars = {G.RuneCurse * 2}, key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
+	end,
+	atlas = "runes",
+    set = "Runes",
+    name = "runes-WUNJO",
+    key = "wunjo",
+    pos = {x = 2, y = 3},
+    config = {extra = {PcentOverkill = 20, reward = 5, active = false}},
+    cost = 4,
+    order = 21,
+    can_use = function(self, card)
+        return (G.STATE == G.STATES.SELECTING_HAND) and not card.ability.extra.active
+    end,
+    keep_on_use = function(self, card)
+        return true
+    end,
+    use = function(self, card, area, copier)
+        G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
+
+
+            card.ability.extra.active = true
+            juice_card_until(card, function()
+                return card.ability.extra.active
+            end)
+                        
+        return true end }))
+    end,
+    calculate = function(self, card, context)
+        if card.ability.extra.active then
+            if context.end_of_round then
+                print(G.GAME.chips)
+
+                local pcent = (G.GAME.chips - G.GAME.blind.chips) / G.GAME.blind.chips
+                print(pcent)
+
+                local PcentOverkill = card.ability.extra.PcentOverkill
+
+                if TGTMConsumables.config.CursedRunes then
+                    PcentOverkill = PcentOverkill / 2
+                    G.GAME.TGTMCurseChance = G.GAME.TGTMCurseChance + (G.RuneCurse * 2 / 100)
+                end
+
+                local pcent2 = math.floor((pcent / (PcentOverkill/100)) * card.ability.extra.reward)
+
+                ease_dollars(math.min(pcent2, (TGTMConsumables.config.CursedRunes and 50) or 100))
+
+                card:start_dissolve({HEX("57ecab")}, nil, 1.6)
+            end
+        end
+    end
+}
+
+SMODS.Consumable{
+    set_ability = function(self, card, initial, delay_sprites)
+        card:set_edition("e_negative", true)
+    end,
+	unlocked = true,
+	discovered = true,
+    loc_vars = function(self, info_queue, card)
+		return {vars = {G.RuneCurse}, key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
+	end,
+    config = {extra = {CardAmt = 1}},
+	atlas = "runes",
+    set = "Runes",
+    name = "runes-GEBO",
+    key = "gebo",
+    pos = {x = 0, y = 2},
+    cost = 4,
+    order = 16,
+    can_use = function(self, card)
+        return (#G.hand.highlighted <= card.ability.extra.CardAmt) and (flag == false)
+    end,
+    use = function(self, card, area, copier)
+        G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
+            if not TGTMConsumables.config.CursedRunes then
+                
+            else
+                G.GAME.TGTMCurseChance = G.GAME.TGTMCurseChance + ((G.RuneCurse)/100)
+            end
+            for i, card in pairs(G.hand.highlighted) do
+                card:set_ability(keyeeee)
             end
         return true end }))
     end,
@@ -616,82 +1320,16 @@ SMODS.Consumable{
 
 
 
---mannaz joker
-SMODS.Joker{
-    set_ability = function(self, card, initial, delay_sprites)
-        card:set_edition("e_negative",true)
-        card.ability.eternal = true
-    end,
-    unlocked = true,
-	discovered = true,
-    loc_vars = function(self, info_queue, card)
-        print(card.config.center.key)
-		return {vars = {card.ability.extra.FaceMult, card.ability.extra.BaseChip, card.ability.extra.FaceChip},key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
-	end,
-    config = {extra = {FaceMult = 1.5, BaseChip = -20, FaceChip = -10}},
-    atlas = "runes",
-    name = "runes-MannazJoker",
-    key = "mannazJoker",
-    pos = {x = 1, y = 1},
-    rarity = 3,
-    blueprint_compat = true,
-    calculate = function(self, card, context)
-        if context.individual then
-            if context.cardarea == G.play then
-                if (context.other_card:get_id() == 11 or context.other_card:get_id() == 12 or context.other_card:get_id() == 13) then
-                    card:juice_up()
-                    local Amt
-                    if not TGTMConsumables.config.CursedRunes then
-                        Amt = card.ability.extra.FaceChip
-                    end
-
-                    return {
-                        x_mult = card.ability.extra.FaceMult,
-                        chips = Amt,
-                        card = card
-                    }
-                end
-            end
-        end
-        if context.joker_main then                
-            local chehe = card.ability.extra.BaseChip
-            if TGTMConsumables.config.CursedRunes then
-                chehe = 0
-            end
-            if hand_chips <= -(card.ability.extra.BaseChip) then
-                chehe = -(hand_chips - 1)
-            end
-            return {
-
-                message = {""..chehe},
-                chip_mod = chehe,
-                colour = G.C.CHIPS
-            }
-        end
-
-    end
-}
-
-
-
-
-
 
 
 --Taking control of round end to change stuff
 local endroundref = end_round
 function end_round()
   endroundref()
-  G.hand:change_size(G.GAME.TGTMchangeHandSize)
+  G.hand:change_size(-G.GAME.TGTMchangeHandSize)
   G.GAME.TGTMchangeHandSize = 0
   for k, v in pairs(G.jokers.cards) do
-    if v.ability.name == "runes-MannazJoker" then
-        v.ability.eternal = false
-        v:juice_up(0.8, 0.8)
-        v:start_dissolve({HEX("57ecab")}, nil, 1.6)
-    end
-
-    for i, vv in ipairs(JokerToRemove) do
+    for i, vv in ipairs(G.JokerToRemove) do
         print(i, vv.ability.name, v.ability.name)
 		if vv == v then 
             v.ability.eternal = false
@@ -700,15 +1338,15 @@ function end_round()
             
         end
 	end
-    for i, vv in ipairs(JokerToUndebuff) do
+    for i, vv in ipairs(G.JokerToUndebuff) do
 		if vv == v then 
             v.debuff = false
             
         end
 	end
   end
-  G.GAME.TGTMFaceBuff = false
-  JokerToRemove = {}
+  G.JokerToRemove = {}
+  UnPlasmaRnd = false
 end
 --
 local ATDref = Card.add_to_deck
