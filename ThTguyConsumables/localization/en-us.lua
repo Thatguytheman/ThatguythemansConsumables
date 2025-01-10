@@ -43,11 +43,11 @@ return {
             },
             c_TGTM_mannaz = {
                 name = "Mannaz",
-                text = {"Scored face cards give {X:mult,C:white}#1#x{} mult", "{C:attention}#2#{} chips, {C:attention}#3#{} more per face card","Only for this round","When used, becomes a negative Joker"}
+                text = {"Scored face cards give {X:mult,C:white}#1#x{} mult and {C:attention}#3#{} chips", "{C:attention}#2#{} chips","Only for this round"}
             },
             c_TGTM_mannazC = {
                 name = "Mannaz?",
-                text = {"Scored face cards give {X:mult,C:white}#1#x{} mult", "Only for this round", "When used, becomes a negative Joker", "{C:attention}+#4#%{} chance for {C:purple}cursed{} cards"}
+                text = {"Scored face cards give {X:mult,C:white}#1#x{} mult", "Only for this round", "{C:attention}+#4#%{} chance for {C:purple}cursed{} cards"}
             },
             c_TGTM_ehwaz = {
                 name = "Ehwaz",
@@ -59,12 +59,69 @@ return {
             },
             c_TGTM_berkano = {
                 name = "Berkano",
-                text = {"{C:attention}Duplicate{} one joker","{C:}Debuff another joker"}
+                text = {"{C:attention}Duplicate{} one joker","{C:mult}Debuff{} another joker"}
             },
             c_TGTM_berkanoC = {
                 name = "Berkano?",
                 text = {"{C:attention}Duplicate{} one joker", "{C:attention}+#1#%{} chance for {C:purple}cursed{} cards"}
+            },
+            c_TGTM_tiwaz = {
+                name = "Tiwaz",
+                text = {"Increase blind payout by {C:attention}+$#1#{} dollars","Increase current blind score by #2#%"}
+            },
+            c_TGTM_tiwazC = {
+                name = "Tiwaz?",
+                text = {"Increase blind payout by {C:attention}+$#1#{} dollars", "{C:attention}+#3#%{} chance for {C:purple}cursed{} cards"}
+            },
+            c_TGTM_sowilo = {
+                name = "Sowilo",
+                text = {"Remove all stickers from a selected joker","Purify the joker"}
+            },
+            c_TGTM_sowiloC = {
+                name = "Sowilo?",
+                text = {"Remove all stickers from a selected joker", "{C:attention}+#1#%{} chance for {C:purple}cursed{} cards"}
+            },
+            c_TGTM_algiz = {
+                name = "Algiz",
+                text = {"Upgrade #1# selected glass cards to Sturdy Glass cards"}
+            },
+            c_TGTM_algizC = {
+                name = "Algiz?",
+                text = {"Upgrade #1# selected glass cards to Sturdier Glass cards", "{C:attention}+#2#%{} chance for {C:purple}cursed{} cards"}
+            },
+            c_TGTM_perthro = {
+                name = "Perthro",
+                text = {"{C:attention}Reroll{} selected {C:attention}joker{} to one of higher {C:attention}rarity{}", "All future blinds raised proportional to the rarity generated"}
+            },
+            c_TGTM_perthroC = {
+                name = "Perthro?",
+                text = {"{C:attention}Reroll selected {C:attention}joker{} to one of higher {C:attention}rarity{}", "{C:purple}Curse chance{} raised proportional to the rarity generated"}
+            },
+            c_TGTM_eihwaz = {
+                name = "Eihwaz",
+                text = {"Balance chips and mult this round", "X#1# current blind requirements"}
+            },
+            c_TGTM_eihwazC = {
+                name = "Eihwaz?",
+                text = {"Balance chips and mult this round", "{C:attention}+#2#%{} chance for {C:purple}cursed{} cards"}
+            },
+            c_TGTM_jera = {
+                name = "Jera",
+                text = {"Double money", "{C:inactive}Max of #1# dollars{}"}
+            },
+            c_TGTM_jeraC = {
+                name = "Jera?",
+                text = {"Double money", "{C:attention}+#2#%{} chance for {C:purple}cursed{} cards", "{C:inactive}Max of #1# dollars{}"}
+            },
+            c_TGTM_isa = {
+                name = "Isa",
+                text = {"+#1# hands for this round", "#2# handsize for this round"}
+            },
+            c_TGTM_isaC = {
+                name = "Isa?",
+                text = {"+#1# hands for this round", "{C:attention}+#3#%{} chance for {C:purple}cursed{} cards"}
             }
+            
 
         },
         Joker = {
@@ -76,6 +133,17 @@ return {
                 name = "Mannaz?",
                 text = {"Scored face cards give {X:mult,C:white}#1#x{} mult", "Destroyed after round"}
             },
+        },
+        Enhanced = {
+            m_TGTM_SturdyGlass = {
+                name = "Sturdy Glass",
+                text = {"{X:mult,C:white}X2{} Mult", "#1# in #2# chance to not give {X:mult,C:white}X2{} Mult"}
+            },
+            m_TGTM_SturdierGlass = {
+                name = "Sturdier Glass",
+                text = {"{X:mult,C:white}X2{} Mult", "#1# in #2# chance to give {X:mult,C:white}X1.5{} Mult"}
+            }
         }
+
     }
 }

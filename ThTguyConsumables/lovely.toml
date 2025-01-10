@@ -1,0 +1,43 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = '''function Card:calculate_joker(context)'''
+position = "after"
+payload = '''
+if (context.blueprint or context.repetition) and (self.edition and self.edition.key == "e_TGTM_Purified") then return nil end
+'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = '''local nu_chip, nu_mult = G.GAME.selected_back:trigger_effect{context = 'final_scoring_step', chips = hand_chips, mult = mult}'''
+position = "after"
+payload = '''
+if UnPlasmaRnd then 
+    local tot = hand_chips + mult
+    nu_chip = math.floor(tot/2)
+    nu_mult = math.floor(tot/2)
+    update_hand_text({delay = 0}, {mult = nu_mult, chips = nu_chip})
+end
+'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "function/state_events.lua"
+pattern = '''local effects = eval_card(G.jokers.cards[i], {cardarea = G.jokers, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, before = true, callback = function(card, ret) effects = {jokers = ret}'''
+position = "after"
+payload = '''
+if UpgradeNextHandPlayed then 
+    print(text)
+    DegradeHand = text
+    tprint(DegradeHand)
+end
+'''
+match_indent = true
