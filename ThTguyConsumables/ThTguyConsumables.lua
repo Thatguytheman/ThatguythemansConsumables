@@ -1,9 +1,4 @@
---- STEAMODDED HEADER
---- MOD_NAME: TGTM's Consumables
---- MOD_ID: TGTMConsumables
---- MOD_AUTHOR: [Thatguytheman]
---- MOD_DESCRIPTION: runes and stuff (and a few random jokers)
---- PREFIX: TGTM
+
 
 --[[to do:
 Add runes (negative tarots temporary gain, long term downsides)
@@ -1289,11 +1284,12 @@ SMODS.Consumable{
     set = "Runes",
     name = "runes-GEBO",
     key = "gebo",
-    pos = {x = 0, y = 2},
+    pos = {x = 3, y = 3},
     cost = 4,
     order = 16,
     can_use = function(self, card)
-        return (#G.hand.highlighted <= card.ability.extra.CardAmt) and (flag == false)
+        
+        return (#G.hand.highlighted <= (TGTMConsumables.config.CursedRunes and card.ability.extra.CardAmt * 2) or card.ability.extra.CardAmt) and (#G.hand.highlighted ~= 0)
     end,
     use = function(self, card, area, copier)
         G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
@@ -1303,12 +1299,72 @@ SMODS.Consumable{
                 G.GAME.TGTMCurseChance = G.GAME.TGTMCurseChance + ((G.RuneCurse)/100)
             end
             for i, card in pairs(G.hand.highlighted) do
-                card:set_ability(keyeeee)
+                card:set_seal(SMODS.poll_seal({guaranteed = true}))
+                card:set_edition(poll_edition(nil,nil,true,true,nil))
             end
         return true end }))
     end,
 }
 
+SMODS.Consumable{
+    set_ability = function(self, card, initial, delay_sprites)
+        card:set_edition("e_negative", true)
+    end,
+	unlocked = true,
+	discovered = true,
+    loc_vars = function(self, info_queue, card)
+		return {vars = {G.RuneCurse}, key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
+	end,
+    config = {extra = {}},
+	atlas = "runes",
+    set = "Runes",
+    name = "runes-KENNAZ",
+    key = "kennaz",
+    pos = {x = 4, y = 3},
+    cost = 4,
+    order = 16,
+    can_use = function(self, card)
+        
+        return G.STATE == G.STATES.SELECTING_HAND
+    end,
+    use = function(self, card, area, copier)
+        G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
+            
+            local FlipAll = not TGTMConsumables.config.CursedRunes
+            if TGTMConsumables.config.CursedRunes then
+                G.GAME.TGTMCurseChance = G.GAME.TGTMCurseChance + ((G.RuneCurse * 1.5)/100)
+            end
+            
+            for k, v in pairs(G.jokers.cards) do
+                if v.facing == 'back' then
+                    G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.1,func = function()
+                        v:flip()
+                    return true end }))
+                elseif not TGTMConsumables.config.CursedRunes then
+                    G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.1,func = function()
+                        v:flip()
+                    return true end }))
+                end
+                delay(0.1)
+            end
+            for k, v in pairs(G.hand.cards) do
+                if v.facing == 'back' then
+                    G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.1,func = function()
+                        v:flip()
+                    return true end }))
+                elseif not TGTMConsumables.config.CursedRunes then
+
+                    G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.1,func = function()
+                        v:flip()
+                    return true end }))
+                    
+                end
+                delay(0.1)
+            end
+
+        return true end }))
+    end,
+}
 
 
 
