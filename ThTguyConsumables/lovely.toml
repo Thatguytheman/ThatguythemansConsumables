@@ -35,9 +35,7 @@ pattern = '''local effects = eval_card(G.jokers.cards[i], {cardarea = G.jokers, 
 position = "after"
 payload = '''
 if UpgradeNextHandPlayed then 
-    print(text)
     DegradeHand = text
-    tprint(DegradeHand)
 end
 '''
 match_indent = true
