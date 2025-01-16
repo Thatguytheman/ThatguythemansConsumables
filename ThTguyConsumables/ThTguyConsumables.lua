@@ -334,11 +334,6 @@ G.RuneCurse = 2
 --blank
 SMODS.Consumable{
     set_ability = function(self, card, initial, delay_sprites)
-        
-        --print(card)
-        --print(card.area)
-        --print(card.area.config)
-        --print(card.area.config.collection)
         card:set_edition("e_negative", true)
     end,
 	unlocked = true,
@@ -377,7 +372,6 @@ SMODS.Consumable{
             end
 
             local card = create_card("Runes", G.consumeables, nil, nil, nil, nil, nil, "TGTM_runes")
-            --print(card.ability.name)
             card:add_to_deck()
             G.consumeables:emplace(card)
             
@@ -399,8 +393,6 @@ SMODS.Consumable{
 
         local AmtDisc = card.ability.extra.discards
         if TGTMConsumables.config.CursedRunes then AmtDisc = AmtDisc * 2 end
-        print(card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or ""))
-        --print(Runes.class_prefix)
 		return {vars = {AmtDisc, G.RuneCurse}, key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
 	end,
 	atlas = "runes",
@@ -502,13 +494,12 @@ SMODS.Consumable{
             if TGTMConsumables.config.CursedRunes then
                 G.GAME.TGTMCurseChance = G.GAME.TGTMCurseChance + (G.RuneCurse / 100)
             else
-                print(G.GAME.interest_cap)
                 --reduce by 20% if more than 1 intrest cap
                 if G.GAME.interest_cap > 5 then
                     G.GAME.interest_cap = math.floor((G.GAME.interest_cap/5) * (1 - (card.ability.extra.percentChange / 100))) * 5
                 end
 
-                print(G.GAME.interest_cap)
+
             end
 
 
@@ -659,11 +650,10 @@ SMODS.Consumable{
                 else
                     for i = 1, #G.jokers.cards do
                         local very = G.jokers.cards[i]
-                        print(i)
-                        print(very)
+
                         if ((very.edition and very.edition.negative ~= true) or not (very.edition)) then
                             table.insert(NonNegativeJokers, very)
-                            print(very.ability)
+
                         end
                     end
 
@@ -730,8 +720,7 @@ SMODS.Consumable{
                     Jok2 = pseudorandom_element(G.jokers.cards, pseudoseed('BerkanoChoose'))
                 until (Jok1 ~= Jok2)
             end
-            print(Jok1.ability.name)
-            print(Jok2.ability.name)
+
 
 
             card_eval_status_text(Jok1,"extra",nil,nil,nil,{message = "Copied!", colour = G.C.CHIPS})
@@ -744,7 +733,6 @@ SMODS.Consumable{
             dupeJoker:add_to_deck()
             G.jokers:emplace(dupeJoker)
 
-            tprint(G.JokerToRemove)
             if TGTMConsumables.config.CursedRunes == false then
                 table.insert(G.JokerToUndebuff, 1, Jok2)
                 card_eval_status_text(Jok2,"extra",nil,nil,nil,{message = "Debuffed!", colour = G.C.MULT})
@@ -862,7 +850,7 @@ SMODS.Consumable{
         else
             keyeeee = G.P_CENTERS.m_TGTM_SturdierGlass
         end
-        print(keyeeee)
+
         info_queue[#info_queue + 1] = keyeeee
         
 
@@ -879,7 +867,7 @@ SMODS.Consumable{
     can_use = function(self, card)
         local flag = false
         for i, card in pairs(G.hand.highlighted) do
-            print(card.ability.name)
+
             if not (card.ability.name == 'Glass Card') then
                 flag = true
             end
@@ -1138,7 +1126,7 @@ SMODS.Consumable{
                 card.ability.extra.UpgradeNextHandPlayed = false
                 card.ability.extra.UpgradedHanded = true 
                 card.ability.extra.DegradeHand = context.scoring_name
-                print(card.ability.extra.DegradeHand)
+
                 return {
                     card = card,
                     level_up = true,
@@ -1253,10 +1241,10 @@ SMODS.Consumable{
     calculate = function(self, card, context)
         if card.ability.extra.active then
             if context.end_of_round then
-                print(G.GAME.chips)
+
 
                 local pcent = (G.GAME.chips - G.GAME.blind.chips) / G.GAME.blind.chips
-                print(pcent)
+
 
                 local PcentOverkill = card.ability.extra.PcentOverkill
 
@@ -1597,7 +1585,7 @@ function end_round()
   G.GAME.TGTMchangeHandSize = 0
   for k, v in pairs(G.jokers.cards) do
     for i, vv in ipairs(G.JokerToRemove) do
-        print(i, vv.ability.name, v.ability.name)
+
 		if vv == v then 
             v.ability.eternal = false
             v:juice_up(0.8, 0.8)
@@ -1619,9 +1607,7 @@ end
 local ATDref = Card.add_to_deck
 function Card:add_to_deck(args)
     ATDref(self, args)
-    --print(self.ability.set)
-    --print(pseudorandom(pseudoseed("Curse")))
-    --print(G.GAME.TGTMCurseChance)
+
     if (G.GAME.TGTMCurseChance > 0) and (self.ability.set == 'Joker') and (pseudorandom(pseudoseed("Curse")) < G.GAME.TGTMCurseChance) then
         G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
             
@@ -1647,10 +1633,7 @@ function Card:use_consumeable(args)
         return true end }))
 
         if #G.hand.highlighted == 0 and G.STATE == G.STATES.PLAY_TAROT and #G.hand.cards ~= 0 then
-            print(G.STATE)
-            print(G.STATES.SELECTING_HAND)
-            print(G.hand.config.card_limit)
-            print("G.hand and #G.hand.highlighted == 0 and G.STATES == G.STATES.SELECTING_HAND")
+
             G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
                 
 
@@ -1662,15 +1645,13 @@ function Card:use_consumeable(args)
                 table.insert(G.playing_cards, cardLoc)
                 card_eval_status_text(cardLoc,"extra",nil,nil,nil,{message = "Blank!", colour = G.C.PURPLE})
                 G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
-                    --print(cardLoc)
+
                     G.hand:emplace(cardLoc, nil, false)
                 return true end }))
             return true end }))
 
         elseif #G.hand.cards ~= 0 then
-            print(G.STATE)
-            print(G.STATES.SELECTING_HAND)
-            print("G.hand and G.STATES == G.STATES.SELECTING_HAND")
+
             for i = 1, #G.hand.highlighted do
                 G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
                     local CardRef = G.hand.highlighted[i]
@@ -1692,7 +1673,7 @@ function Card:use_consumeable(args)
             table.insert(G.playing_cards, cardLoc)
             card_eval_status_text(cardLoc,"extra",nil,nil,nil,{message = "Blank!", colour = G.C.PURPLE})
             G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
-                --print(cardLoc)
+
                 G.deck:emplace(cardLoc, nil, false)
             return true end }))
         end
@@ -1708,7 +1689,7 @@ function Card:use_consumeable(args)
                 card_eval_status_text(self,"extra",nil,nil,nil,{message = "Cursed!", colour = G.C.PURPLE})
             return true end }))
             local handname = self.ability.consumeable.hand_type
-            print("HANDNAME:", handname)
+
             if G.GAME.hands[handname].level > 1 then
                 update_hand_text({sound = 'button', volume = 0.7, pitch = 0.8, delay = 0.3}, {handname=localize(self.ability.consumeable.hand_type, 'poker_hands'),chips = G.GAME.hands[self.ability.consumeable.hand_type].chips, mult = G.GAME.hands[self.ability.consumeable.hand_type].mult, level=G.GAME.hands[self.ability.consumeable.hand_type].level})
                 self.triggered = true
@@ -1725,9 +1706,6 @@ function Card:use_consumeable(args)
         for k, v in pairs(G.playing_cards) do
 
             if v.edition or v.config.center ~= G.P_CENTERS.c_base or v.seal then
-                print(v.edition)
-                print(v.config.center ~= G.P_CENTERS.c_base)
-                print(v.seal)
 
                 if cleared < maxClear then
 
@@ -1778,17 +1756,13 @@ function Card:use_consumeable(args)
                 table.insert(G.playing_cards, cardLoc)
                 card_eval_status_text(cardLoc,"extra",nil,nil,nil,{message = "Blank!", colour = G.C.PURPLE})
                 G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
-                    --print(cardLoc)
+
                     G.deck:emplace(cardLoc, nil, false)
                 return true end }))
             end
         end
 
-        for ke, va in pairs(G.hand.cards) do
-            for i, j in pairs(va.ability) do
-                print(ke,i,mj)
-            end
-        end
+        
 
     else    
     UseRef(self,args) 
