@@ -1,3 +1,16 @@
+
+
+--[[
+            c_TGTM_name = {
+                name = "",
+                text = {""}
+            },
+            c_TGTM_nameC = {
+                name = "",
+                text = {"", "{C:attention}+#1#%{} chance for {C:purple}cursed{} cards"}
+            },
+]]
+
 return {
     descriptions = {
         Runes = {
@@ -120,19 +133,88 @@ return {
             c_TGTM_isaC = {
                 name = "Isa?",
                 text = {"+#1# hands for this round", "{C:attention}+#3#%{} chance for {C:purple}cursed{} cards"}
-            }
-            
+            },
+            c_TGTM_nauthiz = {
+                name = "Nauthiz",
+                text = {"Upgrades next hand played", "Downgrades the selected hand after round", "{C:inactive}(Selected hand:#2#){}"}
+            },
+            c_TGTM_nauthizC = {
+                name = "Nauthiz?",
+                text = {"Upgrades next hand played", "{C:attention}+#1#%{} chance for {C:purple}cursed{} cards"}
+            },
+            c_TGTM_hagalaz = {
+                name = "Hagalaz",
+                text = {"Destroys all cards in hand except for one", "-#2#% blind size per card destroyed"}
+            },
+            c_TGTM_hagalazC = {
+                name = "Hagalaz?",
+                text = {"-#3#% blind size", "{C:attention}+#1#%{} chance for {C:purple}cursed{} cards"}
+            },
+            c_TGTM_wunjo = {
+                name = "Wunjo",
+                text = {"Awards $#3# per #2#% overkill this round", "{C:inactive}(Max payout: #4#){}"}
+            },
+            c_TGTM_wunjoC = {
+                name = "Wunjo?",
+                text = {"Awards $#3# per #2#% overkill this round", "{C:attention}+#1#%{} chance for {C:purple}cursed{} cards", "{C:inactive}(Max payout: #4#){}"}
+            },
+            c_TGTM_gebo = {
+                name = "Gebo",
+                text = {"Give #2# selected cards a random edition and seal"}
+            },
+            c_TGTM_geboC = {
+                name = "Gebo?",
+                text = {"Give #2# selected cards a random edition and seal", "{C:attention}+#1#%{} chance for {C:purple}cursed{} cards"}
+            },
+            c_TGTM_kennaz = {
+                name = "Kennaz",
+                text = {"Flip all jokers and cards held in hand"}
+            },
+            c_TGTM_kennazC = {
+                name = "Kennaz?",
+                text = {"Flip all jokers and cards held in hand face up", "{C:attention}+#1#%{} chance for {C:purple}cursed{} cards"}
+            },
+            c_TGTM_raidho = {
+                name = "Raidho",
+                text = {"Spawn #2# tags"}
+            },
+            c_TGTM_raidhoC = {
+                name = "Raidho?",
+                text = {"Spawn #2# tags", "{C:attention}+#1#%{} chance for {C:purple}cursed{} cards"}
+            },
+            c_TGTM_ansuz = {
+                name = "Ansuz",
+                text = {"Reroll boss blind", "Increase blind size by #2#%"}
+            },
+            c_TGTM_ansuzC = {
+                name = "Ansuz?",
+                text = {"Reroll boss blind", "{C:attention}+#1#%{} chance for {C:purple}cursed{} cards"}
+            },
+            c_TGTM_thurisaz = {
+                name = "Thurisaz",
+                text = {"#2# in #3# chance to remove a selected jokers edition"}
+            },
+            c_TGTM_thurisazC = {
+                name = "Thurisaz?",
+                text = {"Remove a selected jokers edition", "{C:attention}+#1#%{} chance for {C:purple}cursed{} cards"}
+            },
+            c_TGTM_uruz = {
+                name = "Uruz",
+                text = {"Score #2#% of blind instantly", "+#3# ante", "{C:inactive}(#4# chips){}"}
+            },
+            c_TGTM_uruzC = {
+                name = "Uruz?",
+                text = {"Score #2#% of blind instantly", "{C:attention}+#1#%{} chance for {C:purple}cursed{} cards", "{C:inactive}(#4# chips){}"}
+            },
+            c_TGTM_fehu = {
+                name = "Fehu",
+                text = {"Clense #2#% of curse chance", "{C:inactive}(Current curse chance: #3#){}"}
+            },
+            c_TGTM_fehuC = {
+                name = "Fehu?",
+                text = {"Clense #2#% of curse chance", "{C:attention}+#1#%{} chance for {C:purple}cursed{} cards after clensing","{C:inactive}(Current curse chance: #3#){}"}
+            },
 
-        },
-        Joker = {
-            j_TGTM_mannazJoker = {
-                name = "Mannaz",
-                text = {"Scored face cards give {X:mult,C:white}#1#x{} mult", "{C:attention}#2#{} chips, {C:attention}#3#{} more per face card","Destroyed after round"}
-            },
-            j_TGTM_mannazJokerC = {
-                name = "Mannaz?",
-                text = {"Scored face cards give {X:mult,C:white}#1#x{} mult", "Destroyed after round"}
-            },
         },
         Enhanced = {
             m_TGTM_SturdyGlass = {

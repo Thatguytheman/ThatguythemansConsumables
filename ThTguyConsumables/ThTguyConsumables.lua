@@ -1101,7 +1101,7 @@ SMODS.Consumable{
 	unlocked = true,
 	discovered = true,
     loc_vars = function(self, info_queue, card)
-		return {vars = {G.RuneCurse}, key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
+		return {vars = {G.RuneCurse, card.ability.extra.DegradeHand or "None"}, key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
 	end,
 	atlas = "runes",
     set = "Runes",
@@ -1155,6 +1155,8 @@ SMODS.Consumable{
                 
                 else
                 level_up_hand(card, card.ability.extra.DegradeHand, nil, -1)
+                delay(0.5)
+                level_up_hand(card, card.ability.extra.DegradeHand, nil, -1)
                 end
                 card.ability.extra.DegradeHand = nil
                 card:start_dissolve({HEX("57ecab")}, nil, 1.6)
@@ -1172,7 +1174,7 @@ SMODS.Consumable{
 	unlocked = true,
 	discovered = true,
     loc_vars = function(self, info_queue, card)
-		return {vars = {G.RuneCurse}, key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
+		return {vars = {G.RuneCurse, card.ability.extra.PcentDecBlndyes, card.ability.extra.PcentDecBlndyes * 3}, key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
 	end,
 	atlas = "runes",
     set = "Runes",
@@ -1221,14 +1223,14 @@ SMODS.Consumable{
 	unlocked = true,
 	discovered = true,
     loc_vars = function(self, info_queue, card)
-		return {vars = {G.RuneCurse * 2}, key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
+		return {vars = {G.RuneCurse * 2, (TGTMConsumables.config.CursedRunes and (card.ability.extra.PcentOverkill / 2)) or card.ability.extra.PcentOverkill, card.ability.extra.reward, (TGTMConsumables.config.CursedRunes and (card.ability.extra.max * 2)) or card.ability.extra.max}, key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
 	end,
 	atlas = "runes",
     set = "Runes",
     name = "runes-WUNJO",
     key = "wunjo",
     pos = {x = 2, y = 3},
-    config = {extra = {PcentOverkill = 20, reward = 5, active = false}},
+    config = {extra = {PcentOverkill = 20, reward = 5, active = false, max = 50}},
     cost = 4,
     order = 21,
     can_use = function(self, card)
@@ -1265,7 +1267,9 @@ SMODS.Consumable{
 
                 local pcent2 = math.floor((pcent / (PcentOverkill/100)) * card.ability.extra.reward)
 
-                ease_dollars(math.min(pcent2, (TGTMConsumables.config.CursedRunes and 50) or 100))
+                
+
+                ease_dollars(math.min(pcent2, (TGTMConsumables.config.CursedRunes and (card.ability.extra.max * 2)) or card.ability.extra.max))
 
                 card:start_dissolve({HEX("57ecab")}, nil, 1.6)
             end
@@ -1280,7 +1284,7 @@ SMODS.Consumable{
 	unlocked = true,
 	discovered = true,
     loc_vars = function(self, info_queue, card)
-		return {vars = {G.RuneCurse}, key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
+		return {vars = {G.RuneCurse, (TGTMConsumables.config.CursedRunes and card.ability.extra.CardAmt * 2) or card.ability.extra.CardAmt}, key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
 	end,
     config = {extra = {CardAmt = 1}},
 	atlas = "runes",
@@ -1291,8 +1295,8 @@ SMODS.Consumable{
     cost = 4,
     order = 16,
     can_use = function(self, card)
-        
-        return (#G.hand.highlighted <= (TGTMConsumables.config.CursedRunes and card.ability.extra.CardAmt * 2) or card.ability.extra.CardAmt) and (#G.hand.highlighted ~= 0)
+
+        return G.hand and ((#G.hand.highlighted <= ((TGTMConsumables.config.CursedRunes and card.ability.extra.CardAmt * 2) or card.ability.extra.CardAmt)) and (#G.hand.highlighted ~= 0))
     end,
     use = function(self, card, area, copier)
         G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.3,func = function()
@@ -1376,7 +1380,7 @@ SMODS.Consumable{
 	unlocked = true,
 	discovered = true,
     loc_vars = function(self, info_queue, card)
-		return {vars = {G.RuneCurse}, key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
+		return {vars = {G.RuneCurse, TGTMConsumables.config.CursedRunes and (card.ability.extra.tagAmt * 2) or card.ability.extra.tagAmt}, key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
 	end,
     config = {extra = {tagAmt = 4}},
 	atlas = "runes",
@@ -1435,7 +1439,7 @@ SMODS.Consumable{
 	unlocked = true,
 	discovered = true,
     loc_vars = function(self, info_queue, card)
-		return {vars = {G.RuneCurse}, key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
+		return {vars = {G.RuneCurse, (card.ability.extra.blindsizeinc - 1) * 100}, key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
 	end,
 	atlas = "runes",
     set = "Runes",
@@ -1470,7 +1474,7 @@ SMODS.Consumable{
 	unlocked = true,
 	discovered = true,
     loc_vars = function(self, info_queue, card)
-		return {vars = {G.RuneCurse * 2.5}, key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
+		return {vars = {G.RuneCurse * 2.5, G.GAME.probabilities.normal, card.ability.extra.Chance}, key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
 	end,
 	atlas = "runes",
     set = "Runes",
@@ -1513,7 +1517,7 @@ SMODS.Consumable{
 	unlocked = true,
 	discovered = true,
     loc_vars = function(self, info_queue, card)
-		return {vars = {G.RuneCurse * 2.5}, key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
+		return {vars = {G.RuneCurse * 3.5, card.ability.extra.ScorePcent, card.ability.extra.AnteEase, G.GAME.blind and (G.GAME.blind.chips * (card.ability.extra.ScorePcent / 100)) or "No"}, key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
 	end,
 	atlas = "runes",
     set = "Runes",
@@ -1550,7 +1554,7 @@ SMODS.Consumable{
 	unlocked = true,
 	discovered = true,
     loc_vars = function(self, info_queue, card)
-		return {vars = {}, key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
+		return {vars = {G.RuneCurse, TGTMConsumables.config.CursedRunes and (card.ability.extra.PurifyPcent * 2) or card.ability.extra.PurifyPcent, G.GAME.TGTMCurseChance}, key = card.config.center.key .. (TGTMConsumables.config.CursedRunes and "C" or "")}
 	end,
 	atlas = "runes",
     set = "Runes",
